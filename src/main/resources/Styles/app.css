@@ -1,0 +1,69 @@
+/*
+ * Global application styling.
+ * Assistant is the requested UI font. If the font is not installed on the machine,
+ * JavaFX will use the next available fallback font.
+ */
+.root {
+    -fx-font-family: "Assistant", "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 14px;
+    -fx-background-color: #fffaf0;
+}
+
+.label,
+.button,
+.menu,
+.menu-item,
+.text-field {
+    -fx-font-family: "Assistant", "Segoe UI", Arial, sans-serif;
+}
+
+.screen-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #182110;
+}
+
+.field-label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #24331c;
+}
+
+.maze-info {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1d2a16;
+}
+
+.status-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #34442b;
+}
+
+.button {
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-padding: 6px 13px;
+}
+
+.maze-container {
+    -fx-background-color: rgba(255, 251, 236, 0.72);
+    -fx-border-color: rgba(74, 103, 45, 0.38);
+    -fx-border-width: 2px;
+    -fx-padding: 8px;
+}
+
+.start-message {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+}
+
+.main-content {
+    -fx-background-color: #fffaf0;
+}
+
+.controls-row {
+    -fx-padding: 2px 0 2px 0;
+}
