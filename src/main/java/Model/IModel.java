@@ -94,4 +94,11 @@ public interface IModel {
      * threads. The View should call this during a clean application exit.
      */
     void shutdown();
+
+    /**
+     * Reads the application configuration file and returns its content as a formatted string.
+     * Reading files is a Model responsibility — the ViewModel and View must not access the
+     * file system directly.
+     */
+    String getPropertiesText();
 }

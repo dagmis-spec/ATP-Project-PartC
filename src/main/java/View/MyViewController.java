@@ -1,7 +1,7 @@
 package View;
 
 import ViewModel.MyViewModel;
-import algorithms.mazeGenerators.Maze;
+import algorithms.mazeGenerators.Maze; // View-internal use only — not exposed through IView
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -21,15 +21,18 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * Controller for MyView.fxml.
  *
- * This class belongs to the View layer. It reads values from JavaFX controls,
- * binds visible state to the ViewModel, and forwards user actions to the ViewModel.
+ * Implements Observer: the View only observes (the ViewModel), per slide 18.
+ * It reads values from JavaFX controls, binds visible state to the ViewModel,
+ * and forwards user actions to the ViewModel.
  * It must not generate mazes, solve mazes, or work with files directly.
  */
-public class MyViewController implements IView {
+public class MyViewController implements IView, Observer {
     private static final DateTimeFormatter SOLVED_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
@@ -88,7 +91,8 @@ public class MyViewController implements IView {
 
         viewModel.mazeProperty().addListener((observable, oldMaze, newMaze) -> {
             if (newMaze != null) {
-                displayMaze(newMaze);
+                mazeDisplayer.setMaze(newMaze);          // internal View use — OK
+                displayMaze(toGrid(newMaze));             // IView contract: int[][]
             }
         });
         viewModel.playerPositionProperty().addListener((observable, oldPosition, newPosition) ->
@@ -102,6 +106,37 @@ public class MyViewController implements IView {
         });
 
         Platform.runLater(this::registerKeyboardMovement);
+    }
+
+    /**
+     * Called by the ViewModel (Observable) after it processes a Model notification.
+     * The View only observes — it reacts to commands it receives here.
+     *
+     * Communication chain (slide 17):
+     *   Model → ViewModel.update() → ViewModel.notifyObservers() → View.update() → UI changes
+     */
+    @Override
+    public void update(Observable o, Object arg) {
+        // JavaFX UI must be updated on the application thread
+        Platform.runLater(() -> {
+            if (arg instanceof String command) {
+                switch (command) {
+                    case "generateMaze", "loadMaze" -> {
+                        Maze newMaze = viewModel.mazeProperty().get();
+                        if (newMaze != null) {
+                            mazeDisplayer.setMaze(newMaze);
+                            displayMaze(toGrid(newMaze));
+                        }
+                    }
+                    case "solveMaze" ->
+                        mazeDisplayer.setSolution(viewModel.solutionProperty().get());
+                    case "movePlayer" ->
+                        // Player position is already updated via playerPositionProperty listener.
+                        // mazeSolvedProperty listener handles the win message — no duplicate call here.
+                        mazeDisplayer.setPlayerPosition(viewModel.playerPositionProperty().get());
+                }
+            }
+        });
     }
 
     /**
@@ -223,13 +258,27 @@ public class MyViewController implements IView {
     }
 
     /**
-     * Displays basic maze information until the custom MazeDisplayer control is added.
+     * Updates the info label using the plain grid — no Model class in the IView contract.
+     * MazeDisplayer is set separately (internal View use) via the mazeProperty listener.
      */
     @Override
-    public void displayMaze(Maze maze) {
-        mazeDisplayer.setMaze(maze);
+    public void displayMaze(int[][] grid) {
+        mazeInfoLabel.setText("Maze ready: " + grid.length + " × " + grid[0].length);
         mazeDisplayer.setPlayerPosition(viewModel.playerPositionProperty().get());
-        mazeInfoLabel.setText("Maze ready: " + maze.getRows() + " x " + maze.getColumns());
+    }
+
+    /**
+     * Converts a Maze to a plain int[][] grid for use through the IView interface.
+     * Maze is a Model class and must not appear in IView — this helper keeps it internal.
+     */
+    private int[][] toGrid(Maze maze) {
+        int rows = maze.getRows();
+        int cols = maze.getColumns();
+        int[][] grid = new int[rows][cols];
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                grid[r][c] = maze.getCellValue(r, c);
+        return grid;
     }
 
     /**

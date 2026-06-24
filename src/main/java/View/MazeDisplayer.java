@@ -179,7 +179,10 @@ public class MazeDisplayer extends Canvas {
         double wallWidth = width + 2 * WALL_OVERLAP_PIXELS;
         double wallHeight = height + 2 * WALL_OVERLAP_PIXELS;
 
-        if (wallImage != null) {
+        // Use the image only for mazes up to 50×50; larger mazes get a solid color.
+        boolean cellTooSmall = maze.getRows() > 50 || maze.getColumns() > 50;
+
+        if (wallImage != null && !cellTooSmall) {
             graphicsContext.drawImage(wallImage, wallX, wallY, wallWidth, wallHeight);
             return;
         }

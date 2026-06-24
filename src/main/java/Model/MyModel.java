@@ -29,7 +29,7 @@ import java.util.Properties;
  * The View and ViewModel should call this class through the IModel interface instead of
  * working directly with maze algorithms or files.
  */
-public class MyModel implements IModel {
+public class MyModel extends java.util.Observable implements IModel {
     /*
      * Runtime state for the current game.
      * maze is null until the user generates or loads a maze.
@@ -56,6 +56,9 @@ public class MyModel implements IModel {
         maze = mazeGenerator.generate(rows, columns);
         playerPos = maze.getStartPosition();
         solution = null;
+        // Notify ViewModel that a new maze is ready
+        setChanged();
+        notifyObservers("generateMaze");
     }
 
     /**
@@ -106,6 +109,8 @@ public class MyModel implements IModel {
         }
 
         playerPos = new Position(targetRow, targetColumn);
+        setChanged();
+        notifyObservers("movePlayer");
         return true;
     }
 
@@ -154,6 +159,9 @@ public class MyModel implements IModel {
         SearchableMaze searchableMaze = new SearchableMaze(maze);
         ISearchingAlgorithm searchingAlgorithm = createSearchAlgorithmFromConfig();
         solution = searchingAlgorithm.solve(searchableMaze);
+        // Notify ViewModel that solution is ready
+        setChanged();
+        notifyObservers("solveMaze");
     }
 
     /**
@@ -231,6 +239,8 @@ public class MyModel implements IModel {
                      new MyCompressorOutputStream(new FileOutputStream(file))) {
             outputStream.write(maze.toByteArray());
         }
+        setChanged();
+        notifyObservers("saveMaze");
     }
 
     /**
@@ -260,6 +270,20 @@ public class MyModel implements IModel {
         maze = new Maze(decompressedMazeBytes);
         playerPos = maze.getStartPosition();
         solution = null;
+        setChanged();
+        notifyObservers("loadMaze");
+    }
+
+    /**
+     * Reads the application configuration file and returns its content as a formatted string.
+     * File reading belongs in the Model — the ViewModel must not access the file system.
+     */
+    @Override
+    public String getPropertiesText() {
+        return getConfiguredValue("threadPoolSize", "(not set)") == null ? "" :
+                "threadPoolSize = " + getConfiguredValue("threadPoolSize", "") + "\n"
+                + "mazeGeneratingAlgorithm = " + getConfiguredValue("mazeGeneratingAlgorithm", "") + "\n"
+                + "mazeSearchingAlgorithm = " + getConfiguredValue("mazeSearchingAlgorithm", "");
     }
 
     /**

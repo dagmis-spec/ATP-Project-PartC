@@ -13,16 +13,17 @@ import javafx.beans.property.StringProperty;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * Connects the JavaFX View to the plain Java Model.
  *
+ * Inherits from Observable (observed by the View) and implements Observer (observes the Model).
  * The ViewModel exposes bindable JavaFX properties for the controller and delegates
  * all game work to IModel. It does not know about FXML controls, dialogs, or screen layout.
  */
-public class MyViewModel {
+public class MyViewModel extends Observable implements Observer {
     private final IModel model;
 
     private final StringProperty statusProperty = new SimpleStringProperty("Ready to generate a maze.");
@@ -86,23 +87,10 @@ public class MyViewModel {
     }
 
     /**
-     * Reads the project configuration file for display in the Properties dialog.
+     * Delegates config reading to the Model — file access belongs there, not here.
      */
     public String getPropertiesText() {
-        Properties properties = new Properties();
-
-        try (InputStream inputStream = MyViewModel.class.getResourceAsStream("/config.properties")) {
-            if (inputStream == null) {
-                return "config.properties was not found.";
-            }
-
-            properties.load(inputStream);
-            return "threadPoolSize = " + properties.getProperty("threadPoolSize", "") + "\n"
-                    + "mazeGeneratingAlgorithm = " + properties.getProperty("mazeGeneratingAlgorithm", "") + "\n"
-                    + "mazeSearchingAlgorithm = " + properties.getProperty("mazeSearchingAlgorithm", "");
-        } catch (IOException e) {
-            return "Failed to read config.properties: " + e.getMessage();
-        }
+        return model.getPropertiesText();
     }
 
     /**
@@ -110,6 +98,36 @@ public class MyViewModel {
      */
     public void shutdown() {
         model.shutdown();
+    }
+
+    /**
+     * Called by the Model (Observable) when it finishes an operation.
+     * The ViewModel refreshes its JavaFX properties and then notifies the View.
+     *
+     * Communication chain (slide 17):
+     *   Model → notifyObservers(command) → ViewModel.update() → notifyObservers(command) → View.update()
+     */
+    @Override
+    public void update(Observable o, Object arg) {
+        if (arg instanceof String command) {
+            switch (command) {
+                case "generateMaze", "loadMaze" -> refreshStateFromModel();
+                case "solveMaze"   -> {
+                    solutionProperty.set(model.getSolution());
+                    statusProperty.set("Solution is ready.");
+                }
+                case "movePlayer"  -> {
+                    playerPositionProperty.set(model.getPlayerPosition());
+                    boolean solved = model.isMazeSolved();
+                    mazeSolvedProperty.set(solved);
+                    if (solved) statusProperty.set("Maze solved!");
+                }
+                case "saveMaze"    -> statusProperty.set("Maze saved.");
+            }
+        }
+        // Forward the same command to the View
+        setChanged();
+        notifyObservers(arg);
     }
 
     private void refreshStateFromModel() {

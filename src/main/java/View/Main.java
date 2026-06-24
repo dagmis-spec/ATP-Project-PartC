@@ -28,8 +28,15 @@ public class Main extends Application {
 
         Scene scene = new Scene(fxmlLoader.load(), 900, 650);
         scene.getStylesheets().add(Main.class.getResource("/Styles/app.css").toExternalForm());
+
+        // Wire the MVVM layers and Observer chain (slide 18):
+        //   Model (Observable) → ViewModel (Observer + Observable) → Controller (Observer)
+        MyModel model = new MyModel();
+        MyViewModel viewModel = new MyViewModel(model);
+        model.addObserver(viewModel);           // Model notifies ViewModel
+
         MyViewController controller = fxmlLoader.getController();
-        MyViewModel viewModel = new MyViewModel(new MyModel());
+        viewModel.addObserver(controller);      // ViewModel notifies View
         controller.setViewModel(viewModel);
 
         primaryStage.setTitle("ATP Maze Game");
