@@ -1,49 +1,38 @@
 package View;
 
-import Model.MyModel;
-import ViewModel.MyViewModel;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
- * Starts the desktop client for Part C.
+ * Entry point for the ATP Maze desktop application.
  *
- * This class is intentionally small: it only creates the JavaFX window and loads the
- * root FXML file. All screen behavior belongs in {@link MyViewController}, and all maze
- * logic belongs behind the ViewModel/Model layers.
+ * Main loads the welcome screen first. From there WelcomeViewController handles the
+ * scene transition to the game screen after the user selects a couple and clicks Start.
+ *
+ * The class is intentionally minimal: no MVVM wiring happens here because the
+ * welcome controller owns the lifecycle of both screens.
  */
 public class Main extends Application {
-    /**
-     * Creates the primary scene from MyView.fxml.
-     * The assignment requires a resizable window, so width and height here are only
-     * initial values. The minimum size prevents the menu and future maze board from
-     * collapsing into an unusable layout.
-     */
+
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // The FXML stays under resources/View to keep all UI layout files in the View layer.
-        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/View/MyView.fxml"));
+        // Load the opening / welcome screen
+        FXMLLoader welcomeLoader = new FXMLLoader(Main.class.getResource("/View/WelcomeView.fxml"));
+        Scene welcomeScene = new Scene(welcomeLoader.load(), 900, 650);
+        welcomeScene.getStylesheets().add(
+                Main.class.getResource("/Styles/app.css").toExternalForm()
+        );
 
-        Scene scene = new Scene(fxmlLoader.load(), 900, 650);
-        scene.getStylesheets().add(Main.class.getResource("/Styles/app.css").toExternalForm());
-
-        // Wire the MVVM layers and Observer chain (slide 18):
-        //   Model (Observable) → ViewModel (Observer + Observable) → Controller (Observer)
-        MyModel model = new MyModel();
-        MyViewModel viewModel = new MyViewModel(model);
-        model.addObserver(viewModel);           // Model notifies ViewModel
-
-        MyViewController controller = fxmlLoader.getController();
-        viewModel.addObserver(controller);      // ViewModel notifies View
-        controller.setViewModel(viewModel);
+        // Give the controller a reference to the Stage so it can swap scenes later
+        WelcomeViewController welcomeController = welcomeLoader.getController();
+        welcomeController.setStage(primaryStage);
 
         primaryStage.setTitle("ATP Maze Game");
-        primaryStage.setScene(scene);
+        primaryStage.setScene(welcomeScene);
         primaryStage.setMinWidth(700);
         primaryStage.setMinHeight(500);
-        primaryStage.setOnCloseRequest(event -> controller.onExit());
         primaryStage.show();
     }
 }

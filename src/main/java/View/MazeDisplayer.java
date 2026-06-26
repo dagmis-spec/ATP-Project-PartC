@@ -10,6 +10,9 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Reusable JavaFX control that draws the maze board.
  *
@@ -21,7 +24,7 @@ public class MazeDisplayer extends Canvas {
     private static final double BACKGROUND_OPACITY = 1.0;
     private static final double PATH_OPACITY = 0.70;
     private static final double WALL_OVERLAP_PIXELS = 0.35;
-    private static final double CHARACTER_SCALE = 2.25;
+    private static final double CHARACTER_SCALE = 1.6;  // reduced from 2.25 for better cell proportions
     private static final double GOAL_MARKER_SCALE = 1.45;
     private static final double SOLUTION_PATH_OPACITY = 0.62;
     private static final Color PATH_COLOR = Color.rgb(244, 232, 195, PATH_OPACITY);
@@ -34,10 +37,29 @@ public class MazeDisplayer extends Canvas {
     private Position playerPosition;
     private Solution solution;
 
-    private final Image wallImage = loadImage("/Images/wall.png");
-    private final Image brideImage = loadImage("/Images/bride.png");
-    private final Image groomImage = loadImage("/Images/groom.png");
+    private final Image wallImage       = loadImage("/Images/wall.png");
     private final Image backgroundImage = loadImage("/Images/background.jpg");
+
+    /*
+     * playerImage and goalImage start with the BRIDE_GROOM defaults.
+     * WelcomeViewController calls setCouple() before the game starts so the
+     * user's couple choice is reflected on the very first redraw.
+     */
+    private Image playerImage = loadImage("/Images/bride.png");  // default: bride moves
+    private Image goalImage   = loadImage("/Images/groom.png");  // default: groom waits
+
+    /*
+     * Flower trail — every cell the player has ever stepped on gets a flower drawn
+     * on top of the path tile, building a visible trail behind the character.
+     */
+    private final Image flowerImage = loadImage("/Images/flowers.png");
+    /*
+     * Ordered path history used to draw and erase the flower trail.
+     * Stored as "row,col" strings. When the player steps back to a cell already
+     * in the list the list is truncated at that position, removing flowers from
+     * every cell that was visited after it — exactly like un-doing a trail.
+     */
+    private final List<String> pathHistory = new ArrayList<>();
 
     public MazeDisplayer() {
         /*
@@ -54,14 +76,30 @@ public class MazeDisplayer extends Canvas {
     public void setMaze(Maze maze) {
         this.maze = maze;
         this.solution = null;
+        pathHistory.clear();        // reset flower trail for the new maze
         redraw();
     }
 
     /**
-     * Updates the player location and redraws the bride image in the new cell.
+     * Updates the player location, maintains the flower-trail path history, and redraws.
+     *
+     * Forward step: the new cell is appended to pathHistory.
+     * Backtrack step: if the player returns to a cell already in pathHistory, the list
+     * is truncated at that index — removing flowers from every cell visited after it.
      */
     public void setPlayerPosition(Position playerPosition) {
         this.playerPosition = playerPosition;
+        if (playerPosition != null) {
+            String key = playerPosition.getRowIndex() + "," + playerPosition.getColumnIndex();
+            int existingIndex = pathHistory.indexOf(key);
+            if (existingIndex >= 0) {
+                // Backtrack — erase everything after the revisited cell
+                pathHistory.subList(existingIndex + 1, pathHistory.size()).clear();
+            } else {
+                // New cell — extend the trail
+                pathHistory.add(key);
+            }
+        }
         redraw();
     }
 
@@ -70,6 +108,23 @@ public class MazeDisplayer extends Canvas {
      */
     public void setSolution(Solution solution) {
         this.solution = solution;
+        redraw();
+    }
+
+    /**
+     * Applies the couple the user chose on the welcome screen.
+     *
+     * Loads the player and goal sprites from the paths stored in the enum constant
+     * and immediately redraws so the change takes effect without user interaction.
+     * Call this once from MyViewController.setCouple() before the maze is generated.
+     */
+    public void setCouple(CoupleType couple) {
+        if (couple == null) return;
+        Image loadedPlayer = loadImage(couple.getPlayerImagePath());
+        Image loadedGoal   = loadImage(couple.getGoalImagePath());
+        // Only replace if loading succeeded — keeps previous image as fallback
+        if (loadedPlayer != null) playerImage = loadedPlayer;
+        if (loadedGoal   != null) goalImage   = loadedGoal;
         redraw();
     }
 
@@ -99,6 +154,7 @@ public class MazeDisplayer extends Canvas {
         double cellHeight = height / maze.getRows();
 
         drawMazeCells(graphicsContext, cellWidth, cellHeight);
+        drawFlowerTrail(graphicsContext, cellWidth, cellHeight);  // trail sits above path, below solution
         drawSolution(graphicsContext, cellWidth, cellHeight);
         drawGoal(graphicsContext, cellWidth, cellHeight);
         drawPlayer(graphicsContext, cellWidth, cellHeight);
@@ -208,6 +264,51 @@ public class MazeDisplayer extends Canvas {
         );
     }
 
+    /**
+     * Draws the flower image on every cell the player has stepped on.
+     *
+     * The flower is rendered slightly smaller than the cell (8 % padding on each side)
+     * and at 78 % opacity so the warm path colour still shows through, giving the trail
+     * a natural, layered look. The player's current cell is skipped — the character
+     * sprite covers it, and the flower appears there only once the player moves away.
+     */
+    /**
+     * Paints the flower image on every cell in the current path history.
+     *
+     * Because pathHistory is an ordered list that gets truncated on backtracking,
+     * the flowers automatically disappear from cells the player has un-visited.
+     * The player character sprite is drawn after this method so it always appears
+     * on top of the flower at the current cell — no special-casing needed.
+     */
+    private void drawFlowerTrail(GraphicsContext gc, double cellWidth, double cellHeight) {
+        if (flowerImage == null || pathHistory.isEmpty()) {
+            return;
+        }
+
+        double padFraction = 0.09;           // 9 % inset → flowers slightly smaller than cells
+        double padW = cellWidth  * padFraction;
+        double padH = cellHeight * padFraction;
+        double drawW = cellWidth  - 2 * padW;
+        double drawH = cellHeight - 2 * padH;
+
+        gc.save();
+        gc.setGlobalAlpha(0.80);
+        gc.setImageSmoothing(true);
+
+        for (String key : pathHistory) {
+            int comma = key.indexOf(',');
+            int row = Integer.parseInt(key.substring(0, comma));
+            int col = Integer.parseInt(key.substring(comma + 1));
+            gc.drawImage(flowerImage,
+                    col * cellWidth  + padW,
+                    row * cellHeight + padH,
+                    drawW,
+                    drawH);
+        }
+
+        gc.restore();
+    }
+
     private void drawSolution(GraphicsContext graphicsContext, double cellWidth, double cellHeight) {
         if (solution == null) {
             return;
@@ -230,14 +331,14 @@ public class MazeDisplayer extends Canvas {
 
     private void drawGoal(GraphicsContext graphicsContext, double cellWidth, double cellHeight) {
         drawGoalMarker(graphicsContext, maze.getGoalPosition(), cellWidth, cellHeight);
-        drawCharacter(graphicsContext, groomImage, maze.getGoalPosition(), cellWidth, cellHeight, Color.web("#7a4b8f"));
+        drawCharacter(graphicsContext, goalImage, maze.getGoalPosition(), cellWidth, cellHeight, Color.web("#7a4b8f"));
     }
 
     private void drawPlayer(GraphicsContext graphicsContext, double cellWidth, double cellHeight) {
         if (playerPosition == null) {
             return;
         }
-        drawCharacter(graphicsContext, brideImage, playerPosition, cellWidth, cellHeight, Color.web("#f6a6bf"));
+        drawCharacter(graphicsContext, playerImage, playerPosition, cellWidth, cellHeight, Color.web("#f6a6bf"));
     }
 
     private void drawCharacter(GraphicsContext graphicsContext, Image image, Position position,

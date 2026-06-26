@@ -4,17 +4,20 @@ import ViewModel.MyViewModel;
 import algorithms.mazeGenerators.Maze; // View-internal use only — not exposed through IView
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import java.io.File;
@@ -38,10 +41,13 @@ public class MyViewController implements IView, Observer {
 
     private MyViewModel viewModel;
 
+    // Game screen root — needed to bind the background ImageView size
+    @FXML private StackPane gameRoot;
+    @FXML private ImageView gameBackgroundView;
+
     @FXML private Label statusLabel;
     @FXML private Label mazeInfoLabel;
-    @FXML private TextField txtRows;
-    @FXML private TextField txtCols;
+    @FXML private Label soundIcon;       // music play/pause icon inside btnSound's graphic
     @FXML private Button btnSolve;
     @FXML private Button btnSave;
     @FXML private Button btnSound;
@@ -62,6 +68,12 @@ public class MyViewController implements IView, Observer {
     private void initialize() {
         statusLabel.setText("Ready to generate a maze.");
         mazeInfoLabel.setText("No maze loaded.");
+
+        // Stretch the game background photo to fill the whole window
+        gameBackgroundView.fitWidthProperty().bind(gameRoot.widthProperty());
+        gameBackgroundView.fitHeightProperty().bind(gameRoot.heightProperty());
+        var bgUrl = getClass().getResource("/Images/background.jpg");
+        if (bgUrl != null) gameBackgroundView.setImage(new Image(bgUrl.toExternalForm()));
 
         mazeDisplayer = new MazeDisplayer();
         /*
@@ -140,24 +152,40 @@ public class MyViewController implements IView, Observer {
     }
 
     /**
-     * Creates a new maze after validating the row and column inputs.
+     * Opens the NewMazeDialog and, if the user confirms, generates a maze with
+     * the chosen dimensions.  The dialog is modal so execution continues here
+     * only after it closes.
      */
     @FXML
     private void onNewMaze() {
         try {
-            int rows = Integer.parseInt(txtRows.getText().trim());
-            int columns = Integer.parseInt(txtCols.getText().trim());
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/NewMazeDialog.fxml"));
+            Scene dialogScene = new Scene(loader.load());
+            dialogScene.getStylesheets().add(
+                    getClass().getResource("/Styles/app.css").toExternalForm());
 
-            if (rows < 2 || columns < 2) {
-                displayMessage("Invalid Size", "Rows and columns must each be at least 2.");
-                return;
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("New Maze");
+            dialogStage.setScene(dialogScene);
+            dialogStage.setResizable(false);
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(getWindow());
+
+            NewMazeDialogController dialogController = loader.getController();
+            dialogController.setDialogStage(dialogStage);
+
+            dialogStage.showAndWait();
+
+            int rows = dialogController.getResultRows();
+            int cols = dialogController.getResultCols();
+
+            if (rows > 0 && cols > 0) {
+                viewModel.generateMaze(rows, cols);
+                playTrailSound();
+                mazeContainer.requestFocus();
             }
-
-            viewModel.generateMaze(rows, columns);
-            playTrailSound();
-            mazeContainer.requestFocus();
-        } catch (NumberFormatException e) {
-            displayMessage("Invalid Input", "Please enter whole numbers for rows and columns.");
+        } catch (IOException e) {
+            displayMessage("Error", "Could not open the new-maze dialog: " + e.getMessage());
         } catch (RuntimeException e) {
             displayMessage("Maze Error", e.getMessage());
         }
@@ -243,6 +271,18 @@ public class MyViewController implements IView, Observer {
                         + "Programmers: Hadas Tourgeman, Shoval Dagmi\n"
                         + "Generation: MyMazeGenerator\n"
                         + "Solver: configured in config.properties");
+    }
+
+    /**
+     * Applies the couple the user selected on the welcome screen to the MazeDisplayer.
+     *
+     * Must be called from WelcomeViewController after setViewModel() so that
+     * MazeDisplayer exists and is fully initialized before the first redraw.
+     */
+    public void setCouple(CoupleType couple) {
+        if (mazeDisplayer != null) {
+            mazeDisplayer.setCouple(couple);
+        }
     }
 
     /**
@@ -364,10 +404,9 @@ public class MyViewController implements IView, Observer {
         trailSoundEnabled = !trailSoundEnabled;
         if (trailSoundEnabled) {
             playTrailSound();
-            btnSound.setText("Stop Music");
         } else {
             stopTrailSound();
-            btnSound.setText("Play Music");
+            setSoundIcon("▶");
         }
     }
 
@@ -380,7 +419,12 @@ public class MyViewController implements IView, Observer {
         }
 
         trailSoundPlayer.play();
-        btnSound.setText("Stop Music");
+        setSoundIcon("⏸");
+    }
+
+    /** Updates the music icon label inside the toolbar button. */
+    private void setSoundIcon(String symbol) {
+        if (soundIcon != null) soundIcon.setText(symbol);
     }
 
     private void stopTrailSound() {

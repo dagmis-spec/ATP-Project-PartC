@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+    Welcome / opening screen for the ATP Maze Game.
+
+    Layout layers (bottom → top inside StackPane):
+      1. ImageView  — background photo, stretched to fill in controller
+      2. Region     — semi-transparent dark overlay (class "welcome-overlay")
+      3. VBox       — all UI content, centered
+-->
+<StackPane fx:id="rootPane"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="View.WelcomeViewController">
+
+    <!-- Layer 1: background image — size bound to rootPane in controller initialize() -->
+    <ImageView fx:id="backgroundView" preserveRatio="false" smooth="true"/>
+
+    <!-- Layer 2: dark overlay that dims the background for readability -->
+    <Region styleClass="welcome-overlay"/>
+
+    <!-- Layer 3: centered content column -->
+    <VBox alignment="CENTER" spacing="22" maxWidth="780">
+        <padding><Insets top="45" bottom="45" left="50" right="50"/></padding>
+
+        <!-- Game title -->
+        <Label text="♥  THE WEDDING MAZE GAME  ♥" styleClass="welcome-title"/>
+        <Label text="Find Your Way to Forever" styleClass="welcome-subtitle"/>
+
+        <Separator styleClass="welcome-separator"/>
+
+        <!-- Couple selection prompt -->
+        <Label text="Choose Your Couple" styleClass="welcome-section-label"/>
+
+        <!-- Three clickable couple cards -->
+        <HBox alignment="CENTER" spacing="28">
+
+            <VBox fx:id="card1" styleClass="couple-card" alignment="CENTER" spacing="10"
+                  onMouseClicked="#onSelectBrideGroom">
+                <ImageView fx:id="imgBrideGroom" fitWidth="155" fitHeight="155"
+                           preserveRatio="true" smooth="true"/>
+                <Label text="Bride &amp; Groom" styleClass="card-label"/>
+            </VBox>
+
+            <VBox fx:id="card2" styleClass="couple-card" alignment="CENTER" spacing="10"
+                  onMouseClicked="#onSelectBrideBride">
+                <ImageView fx:id="imgBrideBride" fitWidth="155" fitHeight="155"
+                           preserveRatio="true" smooth="true"/>
+                <Label text="Bride &amp; Bride" styleClass="card-label"/>
+            </VBox>
+
+            <VBox fx:id="card3" styleClass="couple-card" alignment="CENTER" spacing="10"
+                  onMouseClicked="#onSelectGroomGroom">
+                <ImageView fx:id="imgGroomGroom" fitWidth="155" fitHeight="155"
+                           preserveRatio="true" smooth="true"/>
+                <Label text="Groom &amp; Groom" styleClass="card-label"/>
+            </VBox>
+
+        </HBox>
+
+        <Separator styleClass="welcome-separator"/>
+
+        <!-- Action buttons -->
+        <Button fx:id="btnStart" text="▶  START GAME"
+                styleClass="welcome-start-btn"
+                onAction="#onStartGame" disable="true"/>
+
+        <Button text="✕  EXIT"
+                styleClass="welcome-exit-btn"
+                onAction="#onExit"/>
+
+    </VBox>
+</StackPane>

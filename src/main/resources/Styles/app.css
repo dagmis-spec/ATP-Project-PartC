@@ -67,3 +67,275 @@
 .controls-row {
     -fx-padding: 2px 0 2px 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   WELCOME / OPENING SCREEN  —  pink / rose theme
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Pink palette used throughout:
+   Hot pink  #E83E8C   Rose deep #C9637A
+   Blush     #FFB6D9   Pale pink #F9C5D5  */
+
+.welcome-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.55);
+}
+
+/* ♥ THE WEDDING MAZE GAME ♥ */
+.welcome-title {
+    -fx-font-size: 40px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFB6D9;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.85), 12, 0, 0, 3);
+}
+
+/* "Find Your Way to Forever" — larger than before */
+.welcome-subtitle {
+    -fx-font-size: 21px;
+    -fx-text-fill: #F9C5D5;
+    -fx-font-style: italic;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 6, 0, 0, 2);
+}
+
+/* Thin rose divider lines */
+.welcome-separator {
+    -fx-background-color: rgba(232, 62, 140, 0.55);
+    -fx-max-width: 500px;
+    -fx-pref-height: 1px;
+}
+
+/* "Choose Your Couple" label */
+.welcome-section-label {
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 6, 0, 0, 2);
+}
+
+/* Default couple card */
+.couple-card {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-radius: 14px;
+    -fx-border-color: rgba(255, 182, 217, 0.35);
+    -fx-border-radius: 14px;
+    -fx-border-width: 2px;
+    -fx-padding: 14px;
+    -fx-cursor: hand;
+    -fx-min-width: 195px;
+    -fx-min-height: 210px;
+}
+
+/* Hover: subtle pink glow */
+.couple-card:hover {
+    -fx-background-color: rgba(232, 62, 140, 0.15);
+    -fx-border-color: rgba(232, 62, 140, 0.65);
+    -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.40), 14, 0, 0, 0);
+}
+
+/* Selected card — strong rose highlight */
+.couple-card-selected {
+    -fx-background-color: rgba(232, 62, 140, 0.28);
+    -fx-border-color: #E83E8C;
+    -fx-border-width: 3px;
+    -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.80), 20, 0, 0, 0);
+}
+
+/* Card name label */
+.card-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 4, 0, 0, 1);
+}
+
+/* ▶ START GAME — large pink gradient button */
+.welcome-start-btn {
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: linear-gradient(to bottom, #FF9EC8, #C9637A);
+    -fx-background-radius: 30px;
+    -fx-border-radius: 30px;
+    -fx-padding: 13px 55px 13px 55px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.50), 8, 0, 0, 3);
+    -fx-min-width: 240px;
+}
+
+.welcome-start-btn:hover {
+    -fx-background-color: linear-gradient(to bottom, #FFB0D4, #D94080);
+    -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.65), 18, 0, 0, 0);
+    -fx-scale-x: 1.04;
+    -fx-scale-y: 1.04;
+}
+
+.welcome-start-btn:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* Ghost EXIT button */
+.welcome-exit-btn {
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255,255,255,0.65);
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255,182,217,0.40);
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 7px 28px 7px 28px;
+    -fx-cursor: hand;
+}
+
+.welcome-exit-btn:hover {
+    -fx-text-fill: #FFB6D9;
+    -fx-border-color: rgba(255,182,217,0.85);
+    -fx-background-color: rgba(232,62,140,0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GAME SCREEN  —  background + large game-style buttons
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Overlay that dims background.jpg so the UI stays readable */
+.game-bg-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.42);
+}
+
+/* Light-coloured menu bar so the standard menu items are easy to read */
+.game-menu-bar {
+    -fx-background-color: rgba(255, 225, 238, 0.94);
+    -fx-padding: 2px 6px;
+}
+
+/* Target the text of each top-level menu */
+.game-menu-bar .menu-button > .label {
+    -fx-text-fill: #B02860;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+/* Arrow/indicator on sub-menus */
+.game-menu-bar .menu-button > .arrow-button > .arrow {
+    -fx-background-color: #B02860;
+}
+
+/* "The Wedding Maze ♥" heading in the toolbar */
+.game-screen-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B02860;
+    -fx-effect: dropshadow(three-pass-box, rgba(255,255,255,0.6), 3, 0, 0, 1);
+}
+
+/* ─── Icon toolbar ─────────────────────────────────────────────── */
+
+/* Toolbar strip below the menu bar */
+.game-toolbar {
+    -fx-background-color: rgba(255, 225, 238, 0.92);
+    -fx-border-color: rgba(176, 40, 96, 0.20);
+    -fx-border-width: 0 0 1.5px 0;
+}
+
+/* Each flat icon button (no visible border) */
+.toolbar-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 6px 10px;
+}
+
+.toolbar-btn:hover {
+    -fx-background-color: rgba(232, 62, 140, 0.12);
+    -fx-background-radius: 10px;
+}
+
+.toolbar-btn:disabled {
+    -fx-opacity: 0.35;
+}
+
+/* Large icon character at the top of each toolbar button */
+.toolbar-icon {
+    -fx-font-size: 26px;
+    -fx-text-fill: #B02860;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+}
+
+/* ❓ Solve icon gets a filled pink circle */
+.solve-icon {
+    -fx-background-color: #E83E8C;
+    -fx-background-radius: 50%;
+    -fx-text-fill: #FFFFFF;
+    -fx-pref-width: 34px;
+    -fx-pref-height: 34px;
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+}
+
+/* ＋ New-maze icon: white + on dark pink square */
+.new-icon {
+    -fx-background-color: #C43470;
+    -fx-background-radius: 8px;
+    -fx-text-fill: #FFFFFF;
+    -fx-pref-width: 34px;
+    -fx-pref-height: 34px;
+    -fx-min-width: 34px;
+    -fx-min-height: 34px;
+}
+
+/* Styled text label beneath each icon */
+.toolbar-text {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B02860;
+}
+
+/* ─── Text-field and field-label used in NewMazeDialog ─────────── */
+.dialog-field-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 4, 0, 0, 1);
+}
+
+/* ─── Dialog title ──────────────────────────────────────────────── */
+.dialog-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFB6D9;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.85), 10, 0, 0, 2);
+}
+
+/* text-field also used in the dialog — reuse game-text-field */
+.game-text-field {
+    -fx-background-color: rgba(255, 240, 248, 0.88);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(232,62,140,0.40);
+    -fx-border-radius: 8px;
+    -fx-border-width: 1.5px;
+    -fx-font-size: 14px;
+    -fx-padding: 5px 8px;
+}
+
+/* Maze canvas fills the BorderPane centre — no extra padding */
+.game-maze-container {
+    -fx-background-color: transparent;
+}
+
+/* Thin status bar pinned to the bottom of the screen */
+.game-status-bar {
+    -fx-background-color: rgba(255, 225, 238, 0.85);
+    -fx-border-color: rgba(176, 40, 96, 0.18);
+    -fx-border-width: 1px 0 0 0;
+}
+
+.game-maze-info {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B02860;
+}
+
+.game-status-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #8C1A48;
+}

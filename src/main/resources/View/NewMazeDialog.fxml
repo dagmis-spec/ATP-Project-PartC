@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+    Modal dialog for creating a new maze.
+    Styled consistently with the welcome screen (background + dark overlay + pink palette).
+-->
+<StackPane fx:id="dialogRoot"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="View.NewMazeDialogController"
+           prefWidth="420" prefHeight="300">
+
+    <!-- Layer 1: background image — same wallpaper as the welcome screen -->
+    <ImageView fx:id="dialogBackground" preserveRatio="false" smooth="true"/>
+
+    <!-- Layer 2: dark overlay -->
+    <Region styleClass="welcome-overlay"/>
+
+    <!-- Layer 3: form content -->
+    <VBox alignment="CENTER" spacing="24" maxWidth="340">
+        <padding><Insets top="36" bottom="36" left="40" right="40"/></padding>
+
+        <Label text="✦  New Maze  ✦" styleClass="dialog-title"/>
+
+        <!-- Row / column inputs side by side -->
+        <HBox alignment="CENTER" spacing="20">
+            <VBox alignment="CENTER" spacing="6">
+                <Label text="Rows" styleClass="dialog-field-label"/>
+                <TextField fx:id="txtRows" text="20" prefWidth="90" styleClass="game-text-field"/>
+            </VBox>
+            <VBox alignment="CENTER" spacing="6">
+                <Label text="Columns" styleClass="dialog-field-label"/>
+                <TextField fx:id="txtCols" text="20" prefWidth="90" styleClass="game-text-field"/>
+            </VBox>
+        </HBox>
+
+        <!-- Action buttons -->
+        <Button text="▶  CREATE" onAction="#onCreate" styleClass="welcome-start-btn"/>
+        <Button text="✕  CANCEL" onAction="#onCancel" styleClass="welcome-exit-btn"/>
+
+    </VBox>
+</StackPane>
