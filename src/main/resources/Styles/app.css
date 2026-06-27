@@ -227,67 +227,61 @@
 
 /* ─── Icon toolbar ─────────────────────────────────────────────── */
 
-/* Toolbar strip below the menu bar */
+/* Toolbar strip below the menu bar — game-style dark-pink band */
 .game-toolbar {
-    -fx-background-color: rgba(255, 225, 238, 0.92);
-    -fx-border-color: rgba(176, 40, 96, 0.20);
-    -fx-border-width: 0 0 1.5px 0;
+    -fx-background-color: rgba(80, 10, 35, 0.82);
+    -fx-border-color: rgba(232, 62, 140, 0.35);
+    -fx-border-width: 0 0 2px 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.45), 6, 0, 0, 3);
 }
 
-/* Each flat icon button (no visible border) */
+/* Each flat icon button — no visible border, just hover glow */
 .toolbar-btn {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-cursor: hand;
-    -fx-padding: 6px 10px;
+    -fx-padding: 8px 16px;
 }
 
 .toolbar-btn:hover {
-    -fx-background-color: rgba(232, 62, 140, 0.12);
-    -fx-background-radius: 10px;
+    -fx-background-color: rgba(232, 62, 140, 0.22);
+    -fx-background-radius: 12px;
+    -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.45), 10, 0, 0, 0);
 }
 
 .toolbar-btn:disabled {
-    -fx-opacity: 0.35;
+    -fx-opacity: 0.32;
 }
 
-/* Large icon character at the top of each toolbar button */
+/* Large icon character */
 .toolbar-icon {
-    -fx-font-size: 26px;
-    -fx-text-fill: #B02860;
+    -fx-font-size: 34px;
+    -fx-text-fill: #FFB6D9;
     -fx-font-weight: bold;
     -fx-alignment: center;
-    -fx-min-width: 34px;
-    -fx-min-height: 34px;
+    -fx-min-width: 44px;
+    -fx-min-height: 44px;
 }
 
-/* ❓ Solve icon gets a filled pink circle */
+/* ❓ Solve — bright pink, larger than base icons */
 .solve-icon {
-    -fx-background-color: #E83E8C;
-    -fx-background-radius: 50%;
-    -fx-text-fill: #FFFFFF;
-    -fx-pref-width: 34px;
-    -fx-pref-height: 34px;
-    -fx-min-width: 34px;
-    -fx-min-height: 34px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #FFB6D9;
+    -fx-font-size: 40px;
 }
 
-/* ＋ New-maze icon: white + on dark pink square */
+/* ＋ New maze — bright pink, larger than base icons */
 .new-icon {
-    -fx-background-color: #C43470;
-    -fx-background-radius: 8px;
-    -fx-text-fill: #FFFFFF;
-    -fx-pref-width: 34px;
-    -fx-pref-height: 34px;
-    -fx-min-width: 34px;
-    -fx-min-height: 34px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #FFB6D9;
+    -fx-font-size: 40px;
 }
 
-/* Styled text label beneath each icon */
+/* Text label beneath each icon */
 .toolbar-text {
-    -fx-font-size: 10px;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-text-fill: #B02860;
+    -fx-text-fill: #FFB6D9;
 }
 
 /* ─── Text-field and field-label used in NewMazeDialog ─────────── */
@@ -322,20 +316,22 @@
     -fx-background-color: transparent;
 }
 
-/* Thin status bar pinned to the bottom of the screen */
+/* Status bar at the bottom — matches toolbar dark style */
 .game-status-bar {
-    -fx-background-color: rgba(255, 225, 238, 0.85);
-    -fx-border-color: rgba(176, 40, 96, 0.18);
+    -fx-background-color: rgba(80, 10, 35, 0.75);
+    -fx-border-color: rgba(232, 62, 140, 0.30);
     -fx-border-width: 1px 0 0 0;
 }
 
 .game-maze-info {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: #B02860;
+    -fx-text-fill: #FFB6D9;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 3, 0, 0, 1);
 }
 
 .game-status-label {
     -fx-font-size: 13px;
-    -fx-text-fill: #8C1A48;
+    -fx-text-fill: rgba(255,182,217,0.80);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 3, 0, 0, 1);
 }

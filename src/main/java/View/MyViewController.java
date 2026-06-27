@@ -5,7 +5,9 @@ import algorithms.mazeGenerators.Maze; // View-internal use only — not exposed
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -13,6 +15,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.FileChooser;
@@ -48,6 +51,7 @@ public class MyViewController implements IView, Observer {
     @FXML private Label statusLabel;
     @FXML private Label mazeInfoLabel;
     @FXML private Label soundIcon;       // music play/pause icon inside btnSound's graphic
+    @FXML private Button btnNewMaze;
     @FXML private Button btnSolve;
     @FXML private Button btnSave;
     @FXML private Button btnSound;
@@ -88,6 +92,22 @@ public class MyViewController implements IView, Observer {
         mazeContainer.getChildren().add(mazeDisplayer);
         initializeSoundPlayers();
         registerMouseMovement();
+        applyCustomToolbarIcons();
+    }
+
+    /** Replaces the + and ? text Labels with programmatically drawn pink Canvas icons. */
+    private void applyCustomToolbarIcons() {
+        replaceToolbarIcon(btnNewMaze, ToolbarIconFactory.plusIcon(42), "new maze");
+        replaceToolbarIcon(btnSolve,   ToolbarIconFactory.questionIcon(42), "solve");
+    }
+
+    private void replaceToolbarIcon(Button btn, Canvas icon, String text) {
+        if (btn == null) return;
+        Label lbl = new Label(text);
+        lbl.getStyleClass().add("toolbar-text");
+        VBox box = new VBox(3, icon, lbl);
+        box.setAlignment(Pos.CENTER);
+        btn.setGraphic(box);
     }
 
     /**
@@ -168,12 +188,16 @@ public class MyViewController implements IView, Observer {
             dialogStage.setTitle("New Maze");
             dialogStage.setScene(dialogScene);
             dialogStage.setResizable(false);
+            dialogStage.setMaximized(false);
+            dialogStage.setWidth(440);
+            dialogStage.setHeight(330);
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(getWindow());
 
             NewMazeDialogController dialogController = loader.getController();
             dialogController.setDialogStage(dialogStage);
 
+            dialogStage.centerOnScreen();
             dialogStage.showAndWait();
 
             int rows = dialogController.getResultRows();
@@ -334,31 +358,13 @@ public class MyViewController implements IView, Observer {
     }
 
     /**
-     * Shows the celebration message when the player reaches the goal.
+     * Shows the custom diamond-ring "SAVE THE DATE" popup when the player reaches the goal.
      */
     private void showMazeSolvedMessage() {
         playEndSound();
         String solvedAt = LocalDateTime.now().format(SOLVED_TIME_FORMATTER);
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("SAVE THE DATE!");
-        alert.setHeaderText(null);
-        alert.setContentText("SAVE THE DATE!\n" + solvedAt);
-        alert.setGraphic(createRingGraphic());
-        alert.showAndWait();
+        MazeSolvedPopup.show(getWindow(), solvedAt);
         stopEndSound();
-    }
-
-    private ImageView createRingGraphic() {
-        if (getClass().getResourceAsStream("/Images/ring.png") == null) {
-            return null;
-        }
-
-        ImageView ringGraphic = new ImageView(new Image(getClass().getResourceAsStream("/Images/ring.png")));
-        ringGraphic.setFitWidth(72);
-        ringGraphic.setFitHeight(72);
-        ringGraphic.setPreserveRatio(true);
-        ringGraphic.setSmooth(true);
-        return ringGraphic;
     }
 
     private Window getWindow() {

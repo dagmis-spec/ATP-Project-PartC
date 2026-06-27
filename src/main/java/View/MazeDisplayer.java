@@ -7,6 +7,7 @@ import algorithms.search.MazeState;
 import algorithms.search.Solution;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
@@ -292,7 +293,15 @@ public class MazeDisplayer extends Canvas {
         double drawH = cellHeight - 2 * padH;
 
         gc.save();
-        gc.setGlobalAlpha(0.80);
+        gc.setGlobalAlpha(0.85);
+        /*
+         * MULTIPLY blend mode makes white pixels (value 1.0) transparent:
+         *   result = source × destination
+         * White × background_color = background_color  (white vanishes)
+         * Flower_color × background_color = slightly-tinted flower (natural look)
+         * This removes the white background of flowers.png without editing the file.
+         */
+        gc.setGlobalBlendMode(BlendMode.MULTIPLY);
         gc.setImageSmoothing(true);
 
         for (String key : pathHistory) {

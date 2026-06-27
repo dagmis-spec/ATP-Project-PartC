@@ -11,6 +11,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 
 /**
@@ -45,6 +47,7 @@ public class WelcomeViewController {
 
     private Stage stage;
     private CoupleType selectedCouple = null;
+    private MediaPlayer startSoundPlayer;
 
     /** Called by Main after loading this FXML so the controller can switch scenes. */
     public void setStage(Stage stage) {
@@ -63,13 +66,21 @@ public class WelcomeViewController {
         backgroundView.fitWidthProperty().bind(rootPane.widthProperty());
         backgroundView.fitHeightProperty().bind(rootPane.heightProperty());
 
-        // wallpaper2.avif — JavaFX loads AVIF on Java 21+; falls back to blank if unsupported
-        loadInto(backgroundView, "/Images/wallpaper2.avif");
+        loadInto(backgroundView, "/Images/wallpaper2.png");
 
         // Couple preview images — file names contain spaces so they must be loaded here
         loadInto(imgBrideGroom, "/Images/bride and groom.png");
         loadInto(imgBrideBride, "/Images/2 brides.png");
         loadInto(imgGroomGroom, "/Images/groom and groom.png");
+
+        // Background music for the welcome / couple-selection screen
+        var soundUrl = getClass().getResource("/sounds/startSound.mp3");
+        if (soundUrl != null) {
+            startSoundPlayer = new MediaPlayer(new Media(soundUrl.toExternalForm()));
+            startSoundPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+            startSoundPlayer.setVolume(0.40);
+            startSoundPlayer.play();
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -140,6 +151,9 @@ public class WelcomeViewController {
             controller.setViewModel(viewModel);
             controller.setCouple(selectedCouple); // apply the couple the user chose
 
+            // Stop welcome-screen music before the game starts
+            if (startSoundPlayer != null) startSoundPlayer.stop();
+
             // Clean application exit from the game screen should shut the model down
             stage.setOnCloseRequest(event -> controller.onExit());
 
@@ -151,6 +165,7 @@ public class WelcomeViewController {
 
     @FXML
     private void onExit() {
+        if (startSoundPlayer != null) startSoundPlayer.stop();
         Platform.exit();
         System.exit(0);
     }

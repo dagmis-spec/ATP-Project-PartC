@@ -56,17 +56,12 @@
                     </Menu>
                 </MenuBar>
 
-                <!-- Icon toolbar — title on the left, icon buttons on the right -->
-                <HBox styleClass="game-toolbar" alignment="CENTER_LEFT" spacing="4">
-                    <padding><Insets top="6" bottom="6" left="14" right="14"/></padding>
-
-                    <Label text="The Wedding Maze ♥" styleClass="game-screen-title"/>
-
-                    <!-- flexible spacer pushes buttons to the right -->
-                    <Region HBox.hgrow="ALWAYS"/>
+                <!-- Icon toolbar — buttons centred in the bar -->
+                <HBox styleClass="game-toolbar" alignment="CENTER" spacing="20">
+                    <padding><Insets top="8" bottom="8" left="20" right="20"/></padding>
 
                     <!-- ✚ NEW MAZE -->
-                    <Button styleClass="toolbar-btn" onAction="#onNewMaze" focusTraversable="false">
+                    <Button fx:id="btnNewMaze" styleClass="toolbar-btn" onAction="#onNewMaze" focusTraversable="false">
                         <graphic>
                             <VBox alignment="CENTER" spacing="3">
                                 <Label text="+" styleClass="toolbar-icon new-icon"/>
