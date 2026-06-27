@@ -102,3 +102,34 @@
 2026-06-27 15:49:01.039 [pool-3-thread-2] INFO  generation-server - Maze generation request completed in 8 ms.
 2026-06-27 15:49:01.040 [JavaFX Application Thread] INFO  generation-server - Maze generation completed: rows=100, columns=100, start={0,85}, goal={99,45}
 2026-06-27 15:57:02.121 [JavaFX Application Thread] INFO  generation-server - Stopping maze generation server on port 5400
+2026-06-27 16:01:45.948 [JavaFX Application Thread] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:09:49.262 [main] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:09:49.338 [main] INFO  generation-server - Client requests maze generation: rows=5, columns=5
+2026-06-27 16:09:49.354 [pool-3-thread-1] INFO  generation-server - Maze generation request started.
+2026-06-27 16:09:49.367 [pool-3-thread-1] INFO  generation-server - Maze generation request completed in 14 ms.
+2026-06-27 16:09:49.372 [main] INFO  generation-server - Maze generation completed: rows=5, columns=5, start={0,3}, goal={4,4}
+2026-06-27 16:09:49.450 [main] INFO  generation-server - Stopping maze generation server on port 5400
+2026-06-27 16:12:22.153 [JavaFX Application Thread] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:12:55.966 [JavaFX Application Thread] INFO  generation-server - Stopping maze generation server on port 5400
+2026-06-27 16:17:22.346 [main] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:17:22.407 [main] INFO  generation-server - Client requests maze generation: rows=5, columns=5
+2026-06-27 16:17:22.419 [pool-3-thread-1] INFO  generation-server - Maze generation request started.
+2026-06-27 16:17:22.430 [pool-3-thread-1] INFO  generation-server - Maze generation request completed in 11 ms.
+2026-06-27 16:17:22.436 [main] INFO  generation-server - Maze generation completed: rows=5, columns=5, start={0,3}, goal={4,0}
+2026-06-27 16:17:22.521 [main] INFO  generation-server - Stopping maze generation server on port 5400
+2026-06-27 16:23:14.282 [JavaFX Application Thread] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:23:54.447 [JavaFX Application Thread] INFO  generation-server - Stopping maze generation server on port 5400
+2026-06-27 16:28:18.414 [main] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:28:18.530 [main] INFO  generation-server - Client requests maze generation: rows=5, columns=5
+2026-06-27 16:28:18.553 [pool-3-thread-1] INFO  generation-server - Maze generation request started.
+2026-06-27 16:28:18.567 [pool-3-thread-1] INFO  generation-server - Maze generation request completed in 14 ms.
+2026-06-27 16:28:18.572 [main] INFO  generation-server - Maze generation completed: rows=5, columns=5, start={0,4}, goal={4,0}
+2026-06-27 16:28:18.655 [main] INFO  generation-server - Stopping maze generation server on port 5400
+2026-06-27 16:29:18.732 [main] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:29:18.883 [main] INFO  generation-server - Client requests maze generation: rows=5, columns=5
+2026-06-27 16:29:18.911 [pool-3-thread-1] INFO  generation-server - Maze generation request started.
+2026-06-27 16:29:18.942 [pool-3-thread-1] INFO  generation-server - Maze generation request completed in 31 ms.
+2026-06-27 16:29:18.950 [main] INFO  generation-server - Maze generation completed: rows=5, columns=5, start={0,4}, goal={4,0}
+2026-06-27 16:29:19.053 [main] INFO  generation-server - Stopping maze generation server on port 5400
+2026-06-27 16:30:54.918 [JavaFX Application Thread] INFO  generation-server - Starting maze generation server on port 5400
+2026-06-27 16:31:16.106 [JavaFX Application Thread] INFO  generation-server - Stopping maze generation server on port 5400

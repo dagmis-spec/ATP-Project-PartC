@@ -5,6 +5,7 @@ import algorithms.mazeGenerators.Maze;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -12,8 +13,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
@@ -61,6 +64,8 @@ public class MyViewController implements IView, Observer {
     private MediaPlayer endSoundPlayer;
     private boolean trailSoundEnabled = true;
     private boolean solutionVisible = false;
+    private boolean initialInstructionsShown = false;
+    private CoupleType selectedCouple = CoupleType.BRIDE_GROOM;
     private double currentZoom = 1.0;
 
     /** Creates view-only controls and default UI state. */
@@ -130,7 +135,10 @@ public class MyViewController implements IView, Observer {
             }
         });
 
-        Platform.runLater(this::registerKeyboardMovement);
+        Platform.runLater(() -> {
+            registerKeyboardMovement();
+            showInitialInstructions();
+        });
     }
 
     /** Applies ViewModel notifications on the JavaFX application thread. */
@@ -273,11 +281,7 @@ public class MyViewController implements IView, Observer {
 
     @FXML
     private void onHelp() {
-        displayMessage("Help",
-                "Use the NumPad to move:\n"
-                        + "4 / 6 / 8 / 2 - left, right, up, down\n"
-                        + "7 / 9 / 1 / 3 - diagonal movement\n\n"
-                        + "Use File > New to generate a maze.");
+        showInstructionsWindow();
     }
 
     @FXML
@@ -291,6 +295,9 @@ public class MyViewController implements IView, Observer {
 
     /** Applies the selected character images to the maze control. */
     public void setCouple(CoupleType couple) {
+        if (couple != null) {
+            selectedCouple = couple;
+        }
         if (mazeDisplayer != null) {
             mazeDisplayer.setCouple(couple);
         }
@@ -332,6 +339,107 @@ public class MyViewController implements IView, Observer {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /** Shows the game instructions once when the game screen is first opened. */
+    private void showInitialInstructions() {
+        if (!initialInstructionsShown) {
+            initialInstructionsShown = true;
+            showInstructionsWindow();
+        }
+    }
+
+    /** Opens a styled instructions window that matches the New Maze dialog design. */
+    private void showInstructionsWindow() {
+        Stage instructionsStage = new Stage();
+        instructionsStage.setTitle("How to Play");
+        instructionsStage.initModality(Modality.WINDOW_MODAL);
+        instructionsStage.initOwner(getWindow());
+        instructionsStage.setResizable(false);
+        instructionsStage.setWidth(620);
+        instructionsStage.setHeight(650);
+
+        StackPane root = new StackPane();
+        root.setPrefSize(600, 610);
+
+        ImageView background = new ImageView();
+        background.setPreserveRatio(false);
+        background.setSmooth(true);
+        background.fitWidthProperty().bind(root.widthProperty());
+        background.fitHeightProperty().bind(root.heightProperty());
+        var backgroundUrl = getClass().getResource("/Images/wallpaper2.png");
+        if (backgroundUrl == null) {
+            backgroundUrl = getClass().getResource("/Images/background.jpg");
+        }
+        if (backgroundUrl != null) {
+            background.setImage(new Image(backgroundUrl.toExternalForm()));
+        }
+
+        Region overlay = new Region();
+        overlay.getStyleClass().add("welcome-overlay");
+
+        Label title = new Label("How to Play");
+        title.getStyleClass().add("dialog-title");
+
+        Label instructions = new Label(getInstructionsText());
+        instructions.getStyleClass().add("instructions-text");
+        instructions.setWrapText(true);
+        instructions.setMaxWidth(500);
+
+        ScrollPane instructionsScroll = new ScrollPane(instructions);
+        instructionsScroll.getStyleClass().add("instructions-scroll");
+        instructionsScroll.setFitToWidth(true);
+        instructionsScroll.setMaxWidth(520);
+        instructionsScroll.setPrefViewportHeight(390);
+
+        Button okButton = new Button("OK");
+        okButton.getStyleClass().add("welcome-start-btn");
+        okButton.setOnAction(event -> instructionsStage.close());
+
+        VBox content = new VBox(18, title, instructionsScroll, okButton);
+        content.setAlignment(Pos.CENTER);
+        content.setMaxWidth(500);
+        content.setPadding(new Insets(34, 42, 34, 42));
+
+        root.getChildren().addAll(background, overlay, content);
+
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(getClass().getResource("/View/app.css").toExternalForm());
+        instructionsStage.setScene(scene);
+        instructionsStage.centerOnScreen();
+        instructionsStage.showAndWait();
+    }
+
+    private String getInstructionsText() {
+        String goalText = switch (selectedCouple) {
+            case BRIDE_GROOM -> "Move the bride through the garden maze until she reaches the groom.";
+            case BRIDE_BRIDE -> "Move the first bride through the garden maze until she reaches the second bride.";
+            case GROOM_GROOM -> "Move the first groom through the garden maze until he reaches the second groom.";
+        };
+
+        return """
+                Goal:
+                %s
+
+                Movement:
+                Use the NumPad keys:
+                4 / 6 / 8 / 2 - left, right, up, down
+                7 / 9 / 1 / 3 - diagonal movement
+                You can also click or drag with the mouse on the maze.
+                Ctrl + mouse wheel, or +/- keys, zooms the maze.
+
+                Toolbar buttons:
+                New Maze - opens the maze-size window. Choose rows and columns, then create a new maze.
+                Save - saves the current maze to a .maze file on your computer. It is enabled only after a maze exists.
+                Load - opens a saved .maze file and displays it on the board.
+                Solve - shows the solution path. Press the same button again when it says hide to remove the solution.
+                Music - turns the background music on or off while you play.
+
+                Menu:
+                File contains New Maze, Save, Load, and Exit.
+                Options > Properties shows the current configuration.
+                Help > Help opens this instructions window again.
+                """.formatted(goalText);
     }
 
     /** Shows the solved-maze celebration popup. */

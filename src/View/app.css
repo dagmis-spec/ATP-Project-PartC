@@ -222,6 +222,31 @@
     -fx-text-fill: #FFB6D9;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.85), 10, 0, 0, 2);
 }
+.instructions-text {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+    -fx-line-spacing: 4px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.75), 5, 0, 0, 1);
+}
+.instructions-scroll {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(255, 182, 217, 0.35);
+    -fx-border-radius: 12px;
+    -fx-border-width: 1.5px;
+    -fx-padding: 12px;
+}
+.instructions-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+.instructions-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+.instructions-scroll .thumb {
+    -fx-background-color: rgba(255, 182, 217, 0.75);
+    -fx-background-radius: 8px;
+}
 .game-text-field {
     -fx-background-color: rgba(255, 240, 248, 0.88);
     -fx-background-radius: 8px;
