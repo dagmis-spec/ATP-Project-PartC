@@ -10,7 +10,7 @@ import javafx.stage.Stage;
  * to the welcome controller.
  */
 public class Main extends Application {
-
+what is
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader welcomeLoader = new FXMLLoader(Main.class.getResource("/View/WelcomeView.fxml"));

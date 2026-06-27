@@ -36,6 +36,9 @@ import java.util.Observer;
 public class MyViewController implements IView, Observer {
     private static final DateTimeFormatter SOLVED_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private static final double MIN_ZOOM = 0.5;
+    private static final double MAX_ZOOM = 2.5;
+    private static final double ZOOM_STEP = 0.1;
 
     private MyViewModel viewModel;
 
@@ -57,6 +60,8 @@ public class MyViewController implements IView, Observer {
     private MediaPlayer trailSoundPlayer;
     private MediaPlayer endSoundPlayer;
     private boolean trailSoundEnabled = true;
+    private boolean solutionVisible = false;
+    private double currentZoom = 1.0;
 
     /** Creates view-only controls and default UI state. */
     @FXML
@@ -81,6 +86,7 @@ public class MyViewController implements IView, Observer {
         mazeContainer.getChildren().add(mazeDisplayer);
         initializeSoundPlayers();
         registerMouseMovement();
+        registerZoomControls();
         applyCustomToolbarIcons();
     }
 
@@ -179,6 +185,7 @@ public class MyViewController implements IView, Observer {
 
             if (rows > 0 && cols > 0) {
                 viewModel.generateMaze(rows, cols);
+                resetSolveButton();
                 playTrailSound();
                 mazeContainer.requestFocus();
             }
@@ -222,6 +229,7 @@ public class MyViewController implements IView, Observer {
 
         try {
             viewModel.loadMaze(file);
+            resetSolveButton();
             playTrailSound();
             mazeContainer.requestFocus();
         } catch (IOException | RuntimeException e) {
@@ -229,14 +237,32 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /** Requests a solution for the active maze. */
+    /** Toggles the solution path on the active maze. */
     @FXML
     private void onSolveMaze() {
         try {
-            viewModel.solveMaze();
+            if (solutionVisible) {
+                mazeDisplayer.clearSolution();
+                solutionVisible = false;
+                replaceToolbarIcon(btnSolve, ToolbarIconFactory.questionIcon(42), "solve");
+            } else {
+                viewModel.solveMaze();
+                mazeDisplayer.setSolution(viewModel.solutionProperty().get());
+                solutionVisible = true;
+                replaceToolbarIcon(btnSolve, ToolbarIconFactory.hideSolutionIcon(42), "hide");
+            }
         } catch (RuntimeException e) {
             displayMessage("Solve Error", e.getMessage());
         }
+    }
+
+    /** Restores the Solve button to its initial state for a new or loaded maze. */
+    private void resetSolveButton() {
+        solutionVisible = false;
+        if (mazeDisplayer != null) {
+            mazeDisplayer.clearSolution();
+        }
+        replaceToolbarIcon(btnSolve, ToolbarIconFactory.questionIcon(42), "solve");
     }
 
     /** Shows the current configuration values. */
@@ -403,6 +429,41 @@ public class MyViewController implements IView, Observer {
         stopEndSound();
     }
 
+    /** Registers Ctrl+mouse-wheel zoom for the maze board. */
+    private void registerZoomControls() {
+        mazeContainer.addEventFilter(javafx.scene.input.ScrollEvent.SCROLL, event -> {
+            if (!event.isControlDown()) {
+                return;
+            }
+
+            changeMazeZoom(event.getDeltaY() > 0 ? ZOOM_STEP : -ZOOM_STEP);
+            event.consume();
+        });
+    }
+
+    /** Applies a bounded visual zoom without changing maze state. */
+    private void changeMazeZoom(double delta) {
+        currentZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, currentZoom + delta));
+        mazeDisplayer.setZoomFactor(currentZoom);
+    }
+
+    private boolean handleKeyboardZoom(javafx.scene.input.KeyEvent event) {
+        boolean zoomIn = switch (event.getCode()) {
+            case PLUS, ADD, EQUALS -> true;
+            default -> false;
+        };
+        boolean zoomOut = switch (event.getCode()) {
+            case MINUS, SUBTRACT -> true;
+            default -> false;
+        };
+
+        if (zoomIn || zoomOut) {
+            changeMazeZoom(zoomIn ? ZOOM_STEP : -ZOOM_STEP);
+            return true;
+        }
+        return false;
+    }
+
     /** Enables mouse click and drag movement over the maze control. */
     private void registerMouseMovement() {
         mazeDisplayer.setOnMousePressed(event -> moveBrideTowardMouse(event.getX(), event.getY()));
@@ -435,6 +496,11 @@ public class MyViewController implements IView, Observer {
     private void registerKeyboardMovement() {
         /* Event filters keep movement active after focus moves to toolbar controls. */
         statusLabel.getScene().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+            if (handleKeyboardZoom(event)) {
+                event.consume();
+                return;
+            }
+
             if (viewModel == null || !viewModel.mazeLoadedProperty().get()) {
                 return;
             }

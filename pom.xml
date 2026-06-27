@@ -65,16 +65,17 @@
     </dependencies>
 
     <build>
+        <sourceDirectory>src</sourceDirectory>
+        <testSourceDirectory>test</testSourceDirectory>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>src/resources</directory>
             </resource>
             <resource>
-                <directory>src/main/java</directory>
+                <directory>src</directory>
                 <includes>
-                    <!-- View resources are stored beside their controllers for assignment compliance. -->
-                    <include>**/*.fxml</include>
-                    <include>**/*.css</include>
+                    <include>View/**/*.fxml</include>
+                    <include>View/**/*.css</include>
                 </includes>
             </resource>
         </resources>

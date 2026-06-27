@@ -36,7 +36,7 @@ public class NewMazeDialogController {
         dialogBackground.fitWidthProperty().bind(dialogRoot.widthProperty());
         dialogBackground.fitHeightProperty().bind(dialogRoot.heightProperty());
 
-        var url = getClass().getResource("/Images/wallpaper2.avif");
+        var url = getClass().getResource("/Images/wallpaper2.png");
         if (url != null) {
             dialogBackground.setImage(new Image(url.toExternalForm()));
         } else {

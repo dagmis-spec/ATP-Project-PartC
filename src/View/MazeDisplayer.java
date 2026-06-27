@@ -31,6 +31,7 @@ public class MazeDisplayer extends Canvas {
     private Maze maze;
     private Position playerPosition;
     private Solution solution;
+    private double zoomFactor = 1.0;
 
     private final Image wallImage       = loadImage("/Images/wall.png");
     private final Image backgroundImage = loadImage("/Images/background.jpg");
@@ -81,6 +82,12 @@ public class MazeDisplayer extends Canvas {
         redraw();
     }
 
+    /** Removes the visible solution path without changing maze or player state. */
+    public void clearSolution() {
+        this.solution = null;
+        redraw();
+    }
+
     /** Applies the selected player and goal sprites. */
     public void setCouple(CoupleType couple) {
         if (couple == null) return;
@@ -104,12 +111,14 @@ public class MazeDisplayer extends Canvas {
             return;
         }
 
+        graphicsContext.save();
+        applyZoom(graphicsContext, width, height);
+        drawBackground(graphicsContext, width, height);
+
         if (maze == null) {
-            drawBackground(graphicsContext, width, height);
+            graphicsContext.restore();
             return;
         }
-
-        drawBackground(graphicsContext, width, height);
 
         double cellWidth = width / maze.getColumns();
         double cellHeight = height / maze.getRows();
@@ -119,6 +128,19 @@ public class MazeDisplayer extends Canvas {
         drawSolution(graphicsContext, cellWidth, cellHeight);
         drawGoal(graphicsContext, cellWidth, cellHeight);
         drawPlayer(graphicsContext, cellWidth, cellHeight);
+        graphicsContext.restore();
+    }
+
+    /** Sets visual zoom while keeping the canvas responsive to window resizing. */
+    public void setZoomFactor(double zoomFactor) {
+        this.zoomFactor = zoomFactor;
+        redraw();
+    }
+
+    private void applyZoom(GraphicsContext graphicsContext, double width, double height) {
+        graphicsContext.translate(width / 2.0, height / 2.0);
+        graphicsContext.scale(zoomFactor, zoomFactor);
+        graphicsContext.translate(-width / 2.0, -height / 2.0);
     }
 
     private Image loadImage(String resourcePath) {
@@ -308,7 +330,11 @@ public class MazeDisplayer extends Canvas {
         if (maze == null || getWidth() <= 0) {
             return -1;
         }
-        int column = (int) (x / (getWidth() / maze.getColumns()));
+        double boardX = toUnzoomedX(x);
+        if (boardX < 0 || boardX >= getWidth()) {
+            return -1;
+        }
+        int column = (int) (boardX / (getWidth() / maze.getColumns()));
         return Math.max(0, Math.min(column, maze.getColumns() - 1));
     }
 
@@ -317,8 +343,22 @@ public class MazeDisplayer extends Canvas {
         if (maze == null || getHeight() <= 0) {
             return -1;
         }
-        int row = (int) (y / (getHeight() / maze.getRows()));
+        double boardY = toUnzoomedY(y);
+        if (boardY < 0 || boardY >= getHeight()) {
+            return -1;
+        }
+        int row = (int) (boardY / (getHeight() / maze.getRows()));
         return Math.max(0, Math.min(row, maze.getRows() - 1));
+    }
+
+    private double toUnzoomedX(double x) {
+        double centerX = getWidth() / 2.0;
+        return centerX + (x - centerX) / zoomFactor;
+    }
+
+    private double toUnzoomedY(double y) {
+        double centerY = getHeight() / 2.0;
+        return centerY + (y - centerY) / zoomFactor;
     }
 
     private void drawGoalMarker(GraphicsContext graphicsContext, Position position, double cellWidth, double cellHeight) {

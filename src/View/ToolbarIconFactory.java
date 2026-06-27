@@ -53,4 +53,20 @@ public class ToolbarIconFactory {
 
         return c;
     }
+
+    /** Creates an X icon for hiding the currently visible solution path. */
+    public static Canvas hideSolutionIcon(double size) {
+        Canvas c = new Canvas(size, size);
+        GraphicsContext gc = c.getGraphicsContext2D();
+
+        double stroke = Math.max(2.5, size * 0.09);
+        double margin = size * 0.22;
+
+        gc.setStroke(PINK);
+        gc.setLineWidth(stroke);
+        gc.strokeLine(margin, margin, size - margin, size - margin);
+        gc.strokeLine(size - margin, margin, margin, size - margin);
+
+        return c;
+    }
 }
