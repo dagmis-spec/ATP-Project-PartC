@@ -7,6 +7,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Controller for NewMazeDialog.fxml.
@@ -16,6 +18,7 @@ import javafx.stage.Stage;
  * Values are -1 if the user cancelled or entered invalid input.
  */
 public class NewMazeDialogController {
+    private static final Logger logger = LogManager.getLogger(NewMazeDialogController.class);
 
     @FXML private StackPane dialogRoot;
     @FXML private ImageView dialogBackground;
@@ -50,11 +53,17 @@ public class NewMazeDialogController {
 
     @FXML
     private void onCreate() {
+        String rowsText = txtRows.getText().trim();
+        String colsText = txtCols.getText().trim();
+
         try {
-            int rows = Integer.parseInt(txtRows.getText().trim());
-            int cols = Integer.parseInt(txtCols.getText().trim());
+            int rows = Integer.parseInt(rowsText);
+            int cols = Integer.parseInt(colsText);
 
             if (rows < 2 || cols < 2) {
+                // This is user input validation in the View layer, before any Model/server request exists.
+                logger.warn("Invalid maze dimensions: rows={}, columns={}. Values must be at least 2.",
+                        rows, cols);
                 showError("Rows and columns must each be at least 2.");
                 return;
             }
@@ -64,6 +73,8 @@ public class NewMazeDialogController {
             dialogStage.close();
 
         } catch (NumberFormatException e) {
+            // Non-numeric input is expected user error, so log it as warning and keep showing the Alert.
+            logger.warn("Invalid maze dimensions input: rows='{}', columns='{}'", rowsText, colsText);
             showError("Please enter whole numbers for rows and columns.");
         }
     }
