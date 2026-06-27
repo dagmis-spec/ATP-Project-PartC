@@ -6,6 +6,7 @@ module atp.project.atpprojectpartc {
     requires javafx.fxml;
     requires javafx.media;
     requires ATPProjectJAR;
+    requires org.apache.logging.log4j;
 
     // FXMLLoader creates View.MyViewController reflectively from MyView.fxml.
     opens View to javafx.fxml;

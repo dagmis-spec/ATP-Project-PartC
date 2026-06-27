@@ -1,35 +1,54 @@
 package Model;
 
-import algorithms.mazeGenerators.Maze;
-import algorithms.mazeGenerators.MyMazeGenerator;
-import algorithms.mazeGenerators.Position;
-import algorithms.search.BestFirstSearch;
-import algorithms.search.BreadthFirstSearch;
-import algorithms.search.DepthFirstSearch;
-import algorithms.search.ISearchingAlgorithm;
-import algorithms.search.SearchableMaze;
-import algorithms.search.Solution;
+import Client.Client;
 import IO.MyCompressorOutputStream;
 import IO.MyDecompressorInputStream;
+import Server.Configurations;
+import Server.Server;
+import Server.ServerStrategyGenerateMaze;
+import Server.ServerStrategySolveSearchProblem;
+import algorithms.mazeGenerators.Maze;
+import algorithms.mazeGenerators.Position;
+import algorithms.search.Solution;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Model implementation for the maze game.
  *
  * This class owns the game data: the active maze, the player's current position,
- * and the currently displayed solution. It uses classes from ATPProjectJAR for maze
- * generation, solving, compression, and decompression.
+ * and the currently displayed solution. It uses the Part B server/client classes
+ * from ATPProjectJAR for maze generation and solving.
  *
  * The View and ViewModel should call this class through the IModel interface instead of
  * working directly with maze algorithms or files.
  */
 public class MyModel extends java.util.Observable implements IModel {
+    private static final Logger logger = LogManager.getLogger(MyModel.class);
+    private static final Logger generationLogger = LogManager.getLogger("generation-server");
+    private static final Logger solvingLogger = LogManager.getLogger("solving-server");
+
+    /*
+     * The two Part B servers run locally for the JavaFX application.
+     * The ports must match the client requests in requestMazeFromServer/requestSolutionFromServer.
+     */
+    private static final int GENERATE_MAZE_PORT = 5400;
+    private static final int SOLVE_MAZE_PORT = 5401;
+    private static final int SERVER_LISTENING_INTERVAL_MS = 1000;
+
     /*
      * Runtime state for the current game.
      * maze is null until the user generates or loads a maze.
@@ -39,12 +58,24 @@ public class MyModel extends java.util.Observable implements IModel {
     private Maze maze;
     private Position playerPos;
     private Solution solution;
+    private Server generateMazeServer;
+    private Server solveMazeServer;
+    private boolean serversStarted;
+
+    /**
+     * Starts the local generation and solving servers when the Model is created.
+     * The ViewModel owns this Model instance for the lifetime of the game screen.
+     */
+    public MyModel() {
+        startServers();
+    }
 
     /**
      * Creates a new maze with the requested dimensions.
      *
-     * MyMazeGenerator comes from ATPProjectJAR. After generation, this method resets
-     * all state that depends on the active maze: player position and solution.
+     * The generation request is sent to the Part B generation server from ATPProjectJAR.
+     * After generation, this method resets all state that depends on the active maze:
+     * player position and solution.
      */
     @Override
     public void generateMaze(int rows, int columns) {
@@ -52,10 +83,13 @@ public class MyModel extends java.util.Observable implements IModel {
             throw new IllegalArgumentException("Maze dimensions must be positive.");
         }
 
-        MyMazeGenerator mazeGenerator = new MyMazeGenerator();
-        maze = mazeGenerator.generate(rows, columns);
+        generationLogger.info("Client requests maze generation: rows={}, columns={}", rows, columns);
+        maze = requestMazeFromServer(rows, columns);
         playerPos = maze.getStartPosition();
         solution = null;
+        generationLogger.info("Maze generation completed: rows={}, columns={}, start={}, goal={}",
+                maze.getRows(), maze.getColumns(), maze.getStartPosition(), maze.getGoalPosition());
+
         // Notify ViewModel that a new maze is ready
         setChanged();
         notifyObservers("generateMaze");
@@ -142,9 +176,7 @@ public class MyModel extends java.util.Observable implements IModel {
     /**
      * Solves the active maze and stores the solution path.
      *
-     * The algorithm is chosen from config.properties. The Maze is first adapted to
-     * SearchableMaze because the JAR search algorithms solve generic searchable problems,
-     * not Maze objects directly.
+     * The solve request is sent to the Part B solving server from ATPProjectJAR.
      */
     @Override
     public void solveMaze() {
@@ -152,33 +184,17 @@ public class MyModel extends java.util.Observable implements IModel {
             throw new IllegalStateException("Cannot solve a maze before one is generated or loaded.");
         }
 
-        /*
-         * The search algorithms from the JAR work on ISearchable problems, not directly on Maze.
-         * SearchableMaze adapts our Maze object to the interface expected by the algorithm.
-         */
-        SearchableMaze searchableMaze = new SearchableMaze(maze);
-        ISearchingAlgorithm searchingAlgorithm = createSearchAlgorithmFromConfig();
-        solution = searchingAlgorithm.solve(searchableMaze);
+        solvingLogger.info("Client requests maze solving: rows={}, columns={}, algorithm={}",
+                maze.getRows(), maze.getColumns(), getConfiguredValue("mazeSearchingAlgorithm", "BestFirstSearch"));
+        solution = requestSolutionFromServer(maze);
+        int solutionLength = solution == null || solution.getSolutionPath() == null
+                ? 0
+                : solution.getSolutionPath().size();
+        solvingLogger.info("Maze solving completed: solutionLength={}", solutionLength);
+
         // Notify ViewModel that solution is ready
         setChanged();
         notifyObservers("solveMaze");
-    }
-
-    /**
-     * Creates the search algorithm selected in src/main/resources/config.properties.
-     *
-     * Keeping the algorithm name in a configuration file means we can switch between
-     * BestFirstSearch, BreadthFirstSearch, and DepthFirstSearch without changing code.
-     */
-    private ISearchingAlgorithm createSearchAlgorithmFromConfig() {
-        String algorithmName = getConfiguredValue("mazeSearchingAlgorithm", "BestFirstSearch");
-
-        return switch (algorithmName) {
-            case "BreadthFirstSearch" -> new BreadthFirstSearch();
-            case "DepthFirstSearch" -> new DepthFirstSearch();
-            case "BestFirstSearch" -> new BestFirstSearch();
-            default -> throw new IllegalArgumentException("Unsupported maze searching algorithm: " + algorithmName);
-        };
     }
 
     /**
@@ -230,6 +246,9 @@ public class MyModel extends java.util.Observable implements IModel {
             throw new IllegalArgumentException("Save file cannot be null.");
         }
 
+        // Persistence belongs to the Model, so file-system events are logged here.
+        logger.info("Saving active maze to file: {}", file.getAbsolutePath());
+
         /*
          * Maze already knows how to convert itself to bytes.
          * The compressor from the JAR keeps the saved file smaller and matches the format
@@ -238,6 +257,11 @@ public class MyModel extends java.util.Observable implements IModel {
         try (MyCompressorOutputStream outputStream =
                      new MyCompressorOutputStream(new FileOutputStream(file))) {
             outputStream.write(maze.toByteArray());
+            logger.info("Maze saved successfully: rows={}, columns={}, file={}",
+                    maze.getRows(), maze.getColumns(), file.getAbsolutePath());
+        } catch (IOException e) {
+            logger.error("Failed to save maze to file: {}", file.getAbsolutePath(), e);
+            throw e;
         }
         setChanged();
         notifyObservers("saveMaze");
@@ -256,6 +280,8 @@ public class MyModel extends java.util.Observable implements IModel {
             throw new IllegalArgumentException("Load file cannot be null.");
         }
 
+        // Persistence belongs to the Model, so file-system events are logged here.
+        logger.info("Loading maze from file: {}", file.getAbsolutePath());
         byte[] decompressedMazeBytes;
 
         /*
@@ -265,11 +291,17 @@ public class MyModel extends java.util.Observable implements IModel {
         try (MyDecompressorInputStream inputStream =
                      new MyDecompressorInputStream(new FileInputStream(file))) {
             decompressedMazeBytes = inputStream.readAllBytes();
+        } catch (IOException e) {
+            logger.error("Failed to load maze from file: {}", file.getAbsolutePath(), e);
+            throw e;
         }
 
         maze = new Maze(decompressedMazeBytes);
         playerPos = maze.getStartPosition();
         solution = null;
+        logger.info("Maze loaded successfully: rows={}, columns={}, start={}, goal={}, file={}",
+                maze.getRows(), maze.getColumns(), maze.getStartPosition(), maze.getGoalPosition(),
+                file.getAbsolutePath());
         setChanged();
         notifyObservers("loadMaze");
     }
@@ -288,12 +320,169 @@ public class MyModel extends java.util.Observable implements IModel {
 
     /**
      * Releases resources owned by the model before the application exits.
-     *
-     * This model currently does not keep servers or background threads open. When server
-     * instances are added later, this is the method that should stop them cleanly.
      */
     @Override
     public void shutdown() {
-        // No open model resources yet.
+        if (!serversStarted) {
+            return;
+        }
+
+        generationLogger.info("Stopping maze generation server on port {}", GENERATE_MAZE_PORT);
+        solvingLogger.info("Stopping maze solving server on port {}", SOLVE_MAZE_PORT);
+        generateMazeServer.stop();
+        solveMazeServer.stop();
+        serversStarted = false;
+        logger.info("Model servers stopped.");
+    }
+
+    /**
+     * Creates and starts the two local Part B servers used by this desktop app.
+     * Generation and solving are separate services so each can write to its own log file.
+     */
+    private void startServers() {
+        configureServerSettings();
+
+        generateMazeServer = new Server(
+                GENERATE_MAZE_PORT,
+                SERVER_LISTENING_INTERVAL_MS,
+                // Decorate the JAR strategy so generation requests are logged from the server side.
+                new LoggingServerStrategy(
+                        new ServerStrategyGenerateMaze(),
+                        generationLogger,
+                        "Maze generation"
+                )
+        );
+        solveMazeServer = new Server(
+                SOLVE_MAZE_PORT,
+                SERVER_LISTENING_INTERVAL_MS,
+                // Decorate the JAR strategy so solving requests are logged from the server side.
+                new LoggingServerStrategy(
+                        new ServerStrategySolveSearchProblem(),
+                        solvingLogger,
+                        "Maze solving"
+                )
+        );
+
+        generationLogger.info("Starting maze generation server on port {}", GENERATE_MAZE_PORT);
+        solvingLogger.info("Starting maze solving server on port {}", SOLVE_MAZE_PORT);
+        generateMazeServer.start();
+        solveMazeServer.start();
+        serversStarted = true;
+        logger.info("Model servers started.");
+    }
+
+    /**
+     * Copies values from this project's config.properties into the JAR's singleton
+     * configuration object before the servers begin handling client requests.
+     */
+    private void configureServerSettings() {
+        Configurations configurations = Configurations.getInstance();
+        configurations.setThreadPoolSize(getConfiguredIntValue("threadPoolSize", 10));
+        configurations.setMazeGeneratingAlgorithm(getConfiguredValue("mazeGeneratingAlgorithm", "MyMazeGenerator"));
+        configurations.setMazeSearchingAlgorithm(getConfiguredValue("mazeSearchingAlgorithm", "BestFirstSearch"));
+        logger.info("Server settings loaded: threadPoolSize={}, mazeGeneratingAlgorithm={}, mazeSearchingAlgorithm={}",
+                configurations.getThreadPoolSize(),
+                configurations.getMazeGeneratingAlgorithm(),
+                configurations.getMazeSearchingAlgorithm());
+    }
+
+    private int getConfiguredIntValue(String key, int defaultValue) {
+        String value = getConfiguredValue(key, String.valueOf(defaultValue));
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid integer configuration for {}: {}. Using default {}.", key, value, defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Sends a maze-size request to the generation server and converts the compressed
+     * byte-array response back into a Maze object for the Model state.
+     */
+    private Maze requestMazeFromServer(int rows, int columns) {
+        AtomicReference<Maze> generatedMaze = new AtomicReference<>();
+        // The client strategy lambda cannot throw checked exceptions through Client, so keep the failure here.
+        AtomicReference<RuntimeException> clientFailure = new AtomicReference<>();
+
+        try {
+            Client client = new Client(InetAddress.getLocalHost(), GENERATE_MAZE_PORT, (inputStream, outputStream) -> {
+                try {
+                    ObjectOutputStream toServer = new ObjectOutputStream(outputStream);
+                    ObjectInputStream fromServer = new ObjectInputStream(inputStream);
+
+                    toServer.flush();
+                    toServer.writeObject(new int[]{rows, columns});
+                    toServer.flush();
+
+                    byte[] compressedMazeBytes = (byte[]) fromServer.readObject();
+                    generatedMaze.set(decompressMaze(compressedMazeBytes));
+                } catch (IOException | ClassNotFoundException e) {
+                    clientFailure.set(new IllegalStateException("Failed to generate maze through the server.", e));
+                }
+            });
+            client.communicateWithServer();
+        } catch (UnknownHostException e) {
+            throw new IllegalStateException("Could not connect to the local maze generation server.", e);
+        }
+
+        if (clientFailure.get() != null) {
+            generationLogger.error("Maze generation server request failed.", clientFailure.get());
+            throw clientFailure.get();
+        }
+        if (generatedMaze.get() == null) {
+            throw new IllegalStateException("Maze generation server did not return a maze.");
+        }
+
+        return generatedMaze.get();
+    }
+
+    /**
+     * The generation server returns compressed maze bytes, matching the Part B protocol.
+     */
+    private Maze decompressMaze(byte[] compressedMazeBytes) throws IOException {
+        try (MyDecompressorInputStream inputStream =
+                     new MyDecompressorInputStream(new ByteArrayInputStream(compressedMazeBytes))) {
+            return new Maze(inputStream.readAllBytes());
+        }
+    }
+
+    /**
+     * Sends the active Maze object to the solving server and receives the server's Solution.
+     */
+    private Solution requestSolutionFromServer(Maze mazeToSolve) {
+        AtomicReference<Solution> solvedMaze = new AtomicReference<>();
+        // The client strategy lambda cannot throw checked exceptions through Client, so keep the failure here.
+        AtomicReference<RuntimeException> clientFailure = new AtomicReference<>();
+
+        try {
+            Client client = new Client(InetAddress.getLocalHost(), SOLVE_MAZE_PORT, (inputStream, outputStream) -> {
+                try {
+                    ObjectOutputStream toServer = new ObjectOutputStream(outputStream);
+                    ObjectInputStream fromServer = new ObjectInputStream(inputStream);
+
+                    toServer.flush();
+                    toServer.writeObject(mazeToSolve);
+                    toServer.flush();
+
+                    solvedMaze.set((Solution) fromServer.readObject());
+                } catch (IOException | ClassNotFoundException e) {
+                    clientFailure.set(new IllegalStateException("Failed to solve maze through the server.", e));
+                }
+            });
+            client.communicateWithServer();
+        } catch (UnknownHostException e) {
+            throw new IllegalStateException("Could not connect to the local maze solving server.", e);
+        }
+
+        if (clientFailure.get() != null) {
+            solvingLogger.error("Maze solving server request failed.", clientFailure.get());
+            throw clientFailure.get();
+        }
+        if (solvedMaze.get() == null) {
+            throw new IllegalStateException("Maze solving server did not return a solution.");
+        }
+
+        return solvedMaze.get();
     }
 }

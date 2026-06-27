@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <!-- Relative to the directory where the application is launched. In IntelliJ/Maven, this is the project root. -->
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+    </Properties>
+
+    <Appenders>
+        <RollingFile name="ApplicationFile"
+                     fileName="${LOG_DIR}/application.log"
+                     filePattern="${LOG_DIR}/application-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+        <RollingFile name="GenerationServerFile"
+                     fileName="${LOG_DIR}/generation-server.log"
+                     filePattern="${LOG_DIR}/generation-server-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+        <RollingFile name="SolvingServerFile"
+                     fileName="${LOG_DIR}/solving-server.log"
+                     filePattern="${LOG_DIR}/solving-server-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- Use this logger for maze-generation server activity. -->
+        <Logger name="generation-server" level="info" additivity="false">
+            <AppenderRef ref="GenerationServerFile"/>
+            <AppenderRef ref="ApplicationFile"/>
+        </Logger>
+
+        <!-- Use this logger for maze-solving server activity. -->
+        <Logger name="solving-server" level="info" additivity="false">
+            <AppenderRef ref="SolvingServerFile"/>
+            <AppenderRef ref="ApplicationFile"/>
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="ApplicationFile"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
