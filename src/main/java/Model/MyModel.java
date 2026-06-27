@@ -27,34 +27,19 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Model implementation for the maze game.
- *
- * This class owns the game data: the active maze, the player's current position,
- * and the currently displayed solution. It uses the Part B server/client classes
- * from ATPProjectJAR for maze generation and solving.
- *
- * The View and ViewModel should call this class through the IModel interface instead of
- * working directly with maze algorithms or files.
+ * Owns game state, persistence, and communication with the maze services.
  */
 public class MyModel extends java.util.Observable implements IModel {
     private static final Logger logger = LogManager.getLogger(MyModel.class);
     private static final Logger generationLogger = LogManager.getLogger("generation-server");
     private static final Logger solvingLogger = LogManager.getLogger("solving-server");
 
-    /*
-     * The two Part B servers run locally for the JavaFX application.
-     * The ports must match the client requests in requestMazeFromServer/requestSolutionFromServer.
-     */
+    /* Local service ports used by the model's client requests. */
     private static final int GENERATE_MAZE_PORT = 5400;
     private static final int SOLVE_MAZE_PORT = 5401;
     private static final int SERVER_LISTENING_INTERVAL_MS = 1000;
 
-    /*
-     * Runtime state for the current game.
-     * maze is null until the user generates or loads a maze.
-     * playerPos is reset whenever a new maze becomes active.
-     * solution is null until the user asks to solve the active maze.
-     */
+    /* Runtime state for the active game. */
     private Maze maze;
     private Position playerPos;
     private Solution solution;
@@ -62,21 +47,12 @@ public class MyModel extends java.util.Observable implements IModel {
     private Server solveMazeServer;
     private boolean serversStarted;
 
-    /**
-     * Starts the local generation and solving servers when the Model is created.
-     * The ViewModel owns this Model instance for the lifetime of the game screen.
-     */
+    /** Starts local generation and solving services for this model instance. */
     public MyModel() {
         startServers();
     }
 
-    /**
-     * Creates a new maze with the requested dimensions.
-     *
-     * The generation request is sent to the Part B generation server from ATPProjectJAR.
-     * After generation, this method resets all state that depends on the active maze:
-     * player position and solution.
-     */
+    /** Creates a maze through the generation service and resets dependent state. */
     @Override
     public void generateMaze(int rows, int columns) {
         if (rows <= 0 || columns <= 0) {
@@ -90,41 +66,23 @@ public class MyModel extends java.util.Observable implements IModel {
         generationLogger.info("Maze generation completed: rows={}, columns={}, start={}, goal={}",
                 maze.getRows(), maze.getColumns(), maze.getStartPosition(), maze.getGoalPosition());
 
-        // Notify ViewModel that a new maze is ready
         setChanged();
         notifyObservers("generateMaze");
     }
 
-    /**
-     * Returns the active maze object.
-     *
-     * The caller can inspect this object for drawing, but the Model remains responsible
-     * for changing which maze is active.
-     */
+    /** Returns the active maze object. */
     @Override
     public Maze getMaze() {
         return maze;
     }
 
-    /**
-     * Returns the player's current position in the active maze.
-     *
-     * This value is controlled by generate/load/move operations in the Model.
-     */
+    /** Returns the player's current maze position. */
     @Override
     public Position getPlayerPosition() {
         return playerPos;
     }
 
-    /**
-     * Moves the player inside the active maze if the requested target cell is legal.
-     *
-     * The View sends movement as row/column deltas, for example:
-     * (-1, 0) for up, (1, 0) for down, and (-1, 1) for diagonal up-right.
-     *
-     * The Model checks the maze boundaries and wall cells before updating playerPos.
-     * Returning false lets the ViewModel/View ignore invalid movement without crashing.
-     */
+    /** Applies a row/column movement delta after checking walls and boundaries. */
     @Override
     public boolean movePlayer(int rowDelta, int columnDelta) {
         if (maze == null || playerPos == null) {
@@ -148,20 +106,12 @@ public class MyModel extends java.util.Observable implements IModel {
         return true;
     }
 
-    /**
-     * Checks whether a row/column pair is inside the current maze boundaries.
-     *
-     * This helper assumes maze is not null. Public methods must check that before calling it.
-     */
+    /** Assumes maze is not null; public callers check that first. */
     private boolean isInsideMaze(int row, int column) {
         return row >= 0 && row < maze.getRows() && column >= 0 && column < maze.getColumns();
     }
 
-    /**
-     * Checks whether the player has reached the maze goal cell.
-     *
-     * The goal position comes from the Maze object created by the generator or loaded from file.
-     */
+    /** Checks whether the player has reached the maze goal cell. */
     @Override
     public boolean isMazeSolved() {
         if (maze == null || playerPos == null) {
@@ -173,11 +123,7 @@ public class MyModel extends java.util.Observable implements IModel {
                 && playerPos.getColumnIndex() == goalPosition.getColumnIndex();
     }
 
-    /**
-     * Solves the active maze and stores the solution path.
-     *
-     * The solve request is sent to the Part B solving server from ATPProjectJAR.
-     */
+    /** Solves the active maze through the solving service. */
     @Override
     public void solveMaze() {
         if (maze == null) {
@@ -192,18 +138,11 @@ public class MyModel extends java.util.Observable implements IModel {
                 : solution.getSolutionPath().size();
         solvingLogger.info("Maze solving completed: solutionLength={}", solutionLength);
 
-        // Notify ViewModel that solution is ready
         setChanged();
         notifyObservers("solveMaze");
     }
 
-    /**
-     * Reads a value from the application configuration file.
-     *
-     * The file is loaded from the classpath, so src/main/resources/config.properties becomes
-     * available as /config.properties after Maven copies resources to target/classes.
-     * If the file or key is missing, the provided default keeps the model usable.
-     */
+    /** Reads a configuration value from the classpath resource. */
     private String getConfiguredValue(String key, String defaultValue) {
         Properties properties = new Properties();
 
@@ -219,23 +158,13 @@ public class MyModel extends java.util.Observable implements IModel {
         }
     }
 
-    /**
-     * Returns the last solution calculated for the active maze.
-     *
-     * A null result means the maze has not been solved yet, or a new maze was generated/loaded
-     * after the previous solution.
-     */
+    /** Returns the current solution, or null when no solution is available. */
     @Override
     public Solution getSolution() {
         return solution;
     }
 
-    /**
-     * Saves the active maze to disk using the same compressed format as Part B.
-     *
-     * The selected file comes from the View layer, usually through a FileChooser.
-     * The Model only receives the destination and writes the maze bytes.
-     */
+    /** Saves the active maze with the same compressed format used for loading. */
     @Override
     public void saveMaze(File file) throws IOException {
         if (maze == null) {
@@ -246,13 +175,10 @@ public class MyModel extends java.util.Observable implements IModel {
             throw new IllegalArgumentException("Save file cannot be null.");
         }
 
-        // Persistence belongs to the Model, so file-system events are logged here.
         logger.info("Saving active maze to file: {}", file.getAbsolutePath());
 
         /*
-         * Maze already knows how to convert itself to bytes.
-         * The compressor from the JAR keeps the saved file smaller and matches the format
-         * expected by MyDecompressorInputStream when loading the maze back.
+         * Use the maze byte format so saved files can be loaded by the matching decompressor.
          */
         try (MyCompressorOutputStream outputStream =
                      new MyCompressorOutputStream(new FileOutputStream(file))) {
@@ -267,26 +193,18 @@ public class MyModel extends java.util.Observable implements IModel {
         notifyObservers("saveMaze");
     }
 
-    /**
-     * Loads a maze from disk and makes it the active game.
-     *
-     * The file must have been saved with saveMaze or another compatible compressor.
-     * Loading a new maze resets runtime state: the player returns to the start position
-     * and the previous solution is cleared because it belongs to the old maze.
-     */
+    /** Loads a maze file and resets player and solution state. */
     @Override
     public void loadMaze(File file) throws IOException {
         if (file == null) {
             throw new IllegalArgumentException("Load file cannot be null.");
         }
 
-        // Persistence belongs to the Model, so file-system events are logged here.
         logger.info("Loading maze from file: {}", file.getAbsolutePath());
         byte[] decompressedMazeBytes;
 
         /*
-         * The file is expected to be in the same compressed format produced by saveMaze.
-         * readAllBytes() works here because MyDecompressorInputStream is an InputStream.
+         * Loaded files are expected to use the compressed maze format written by saveMaze.
          */
         try (MyDecompressorInputStream inputStream =
                      new MyDecompressorInputStream(new FileInputStream(file))) {
@@ -306,10 +224,7 @@ public class MyModel extends java.util.Observable implements IModel {
         notifyObservers("loadMaze");
     }
 
-    /**
-     * Reads the application configuration file and returns its content as a formatted string.
-     * File reading belongs in the Model — the ViewModel must not access the file system.
-     */
+    /** Formats configuration values for display. */
     @Override
     public String getPropertiesText() {
         return getConfiguredValue("threadPoolSize", "(not set)") == null ? "" :
@@ -318,9 +233,7 @@ public class MyModel extends java.util.Observable implements IModel {
                 + "mazeSearchingAlgorithm = " + getConfiguredValue("mazeSearchingAlgorithm", "");
     }
 
-    /**
-     * Releases resources owned by the model before the application exits.
-     */
+    /** Stops model-owned background services. */
     @Override
     public void shutdown() {
         if (!serversStarted) {
@@ -335,17 +248,13 @@ public class MyModel extends java.util.Observable implements IModel {
         logger.info("Model servers stopped.");
     }
 
-    /**
-     * Creates and starts the two local Part B servers used by this desktop app.
-     * Generation and solving are separate services so each can write to its own log file.
-     */
+    /** Starts separate local services for maze generation and solving. */
     private void startServers() {
         configureServerSettings();
 
         generateMazeServer = new Server(
                 GENERATE_MAZE_PORT,
                 SERVER_LISTENING_INTERVAL_MS,
-                // Decorate the JAR strategy so generation requests are logged from the server side.
                 new LoggingServerStrategy(
                         new ServerStrategyGenerateMaze(),
                         generationLogger,
@@ -355,7 +264,6 @@ public class MyModel extends java.util.Observable implements IModel {
         solveMazeServer = new Server(
                 SOLVE_MAZE_PORT,
                 SERVER_LISTENING_INTERVAL_MS,
-                // Decorate the JAR strategy so solving requests are logged from the server side.
                 new LoggingServerStrategy(
                         new ServerStrategySolveSearchProblem(),
                         solvingLogger,
@@ -371,10 +279,7 @@ public class MyModel extends java.util.Observable implements IModel {
         logger.info("Model servers started.");
     }
 
-    /**
-     * Copies values from this project's config.properties into the JAR's singleton
-     * configuration object before the servers begin handling client requests.
-     */
+    /** Applies config.properties values to the shared server configuration. */
     private void configureServerSettings() {
         Configurations configurations = Configurations.getInstance();
         configurations.setThreadPoolSize(getConfiguredIntValue("threadPoolSize", 10));
@@ -396,13 +301,10 @@ public class MyModel extends java.util.Observable implements IModel {
         }
     }
 
-    /**
-     * Sends a maze-size request to the generation server and converts the compressed
-     * byte-array response back into a Maze object for the Model state.
-     */
+    /** Requests a generated maze and converts the compressed response into a Maze. */
     private Maze requestMazeFromServer(int rows, int columns) {
         AtomicReference<Maze> generatedMaze = new AtomicReference<>();
-        // The client strategy lambda cannot throw checked exceptions through Client, so keep the failure here.
+        // Client strategy lambdas cannot propagate checked exceptions directly.
         AtomicReference<RuntimeException> clientFailure = new AtomicReference<>();
 
         try {
@@ -437,9 +339,7 @@ public class MyModel extends java.util.Observable implements IModel {
         return generatedMaze.get();
     }
 
-    /**
-     * The generation server returns compressed maze bytes, matching the Part B protocol.
-     */
+    /** Converts compressed maze bytes into a Maze instance. */
     private Maze decompressMaze(byte[] compressedMazeBytes) throws IOException {
         try (MyDecompressorInputStream inputStream =
                      new MyDecompressorInputStream(new ByteArrayInputStream(compressedMazeBytes))) {
@@ -447,12 +347,10 @@ public class MyModel extends java.util.Observable implements IModel {
         }
     }
 
-    /**
-     * Sends the active Maze object to the solving server and receives the server's Solution.
-     */
+    /** Sends the active maze to the solving service and returns its solution. */
     private Solution requestSolutionFromServer(Maze mazeToSolve) {
         AtomicReference<Solution> solvedMaze = new AtomicReference<>();
-        // The client strategy lambda cannot throw checked exceptions through Client, so keep the failure here.
+        // Client strategy lambdas cannot propagate checked exceptions directly.
         AtomicReference<RuntimeException> clientFailure = new AtomicReference<>();
 
         try {

@@ -6,26 +6,19 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
- * Entry point for the ATP Maze desktop application.
- *
- * Main loads the welcome screen first. From there WelcomeViewController handles the
- * scene transition to the game screen after the user selects a couple and clicks Start.
- *
- * The class is intentionally minimal: no MVVM wiring happens here because the
- * welcome controller owns the lifecycle of both screens.
+ * JavaFX entry point. Loads the welcome screen and delegates later scene changes
+ * to the welcome controller.
  */
 public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Load the opening / welcome screen
         FXMLLoader welcomeLoader = new FXMLLoader(Main.class.getResource("/View/WelcomeView.fxml"));
         Scene welcomeScene = new Scene(welcomeLoader.load(), 900, 650);
         welcomeScene.getStylesheets().add(
-                Main.class.getResource("/Styles/app.css").toExternalForm()
+                Main.class.getResource("/View/app.css").toExternalForm()
         );
 
-        // Give the controller a reference to the Stage so it can swap scenes later
         WelcomeViewController welcomeController = welcomeLoader.getController();
         welcomeController.setStage(primaryStage);
 

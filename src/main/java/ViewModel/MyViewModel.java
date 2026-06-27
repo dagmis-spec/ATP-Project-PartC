@@ -17,11 +17,8 @@ import java.util.Observable;
 import java.util.Observer;
 
 /**
- * Connects the JavaFX View to the plain Java Model.
- *
- * Inherits from Observable (observed by the View) and implements Observer (observes the Model).
- * The ViewModel exposes bindable JavaFX properties for the controller and delegates
- * all game work to IModel. It does not know about FXML controls, dialogs, or screen layout.
+ * Bridges JavaFX controllers and the UI-independent Model.
+ * Exposes bindable state and forwards model notifications to the View.
  */
 public class MyViewModel extends Observable implements Observer {
     private final IModel model;
@@ -37,44 +34,34 @@ public class MyViewModel extends Observable implements Observer {
         this.model = model;
     }
 
-    /**
-     * Generates a new maze through the Model and publishes the new state for the View.
-     */
+    /** Generates a new maze and publishes the refreshed model state. */
     public void generateMaze(int rows, int columns) {
         model.generateMaze(rows, columns);
         refreshStateFromModel();
         statusProperty.set("Maze generated: " + rows + " x " + columns);
     }
 
-    /**
-     * Requests a solution for the current maze and exposes it through solutionProperty.
-     */
+    /** Requests and exposes a solution for the active maze. */
     public void solveMaze() {
         model.solveMaze();
         solutionProperty.set(model.getSolution());
         statusProperty.set("Solution is ready.");
     }
 
-    /**
-     * Saves the active maze to the file chosen by the View.
-     */
+    /** Saves the active maze to the file selected by the View. */
     public void saveMaze(File file) throws IOException {
         model.saveMaze(file);
         statusProperty.set("Maze saved.");
     }
 
-    /**
-     * Loads a maze from the file chosen by the View and publishes the loaded state.
-     */
+    /** Loads a maze from the file selected by the View. */
     public void loadMaze(File file) throws IOException {
         model.loadMaze(file);
         refreshStateFromModel();
         statusProperty.set("Maze loaded.");
     }
 
-    /**
-     * Moves the player and updates bindable state when the move is valid.
-     */
+    /** Moves the player and updates properties only when the move is valid. */
     public boolean movePlayer(int rowDelta, int columnDelta) {
         boolean moved = model.movePlayer(rowDelta, columnDelta);
         if (moved) {
@@ -86,46 +73,37 @@ public class MyViewModel extends Observable implements Observer {
         return moved;
     }
 
-    /**
-     * Delegates config reading to the Model — file access belongs there, not here.
-     */
+    /** Keeps configuration file access inside the Model. */
     public String getPropertiesText() {
         return model.getPropertiesText();
     }
 
-    /**
-     * Lets the Model close servers or background resources before the app exits.
-     */
+    /** Lets the Model release servers and background resources. */
     public void shutdown() {
         model.shutdown();
     }
 
-    /**
-     * Called by the Model (Observable) when it finishes an operation.
-     * The ViewModel refreshes its JavaFX properties and then notifies the View.
-     *
-     * Communication chain (slide 17):
-     *   Model → notifyObservers(command) → ViewModel.update() → notifyObservers(command) → View.update()
-     */
+    /** Refreshes properties after Model notifications and forwards the command to the View. */
     @Override
     public void update(Observable o, Object arg) {
         if (arg instanceof String command) {
             switch (command) {
                 case "generateMaze", "loadMaze" -> refreshStateFromModel();
-                case "solveMaze"   -> {
+                case "solveMaze" -> {
                     solutionProperty.set(model.getSolution());
                     statusProperty.set("Solution is ready.");
                 }
-                case "movePlayer"  -> {
+                case "movePlayer" -> {
                     playerPositionProperty.set(model.getPlayerPosition());
                     boolean solved = model.isMazeSolved();
                     mazeSolvedProperty.set(solved);
-                    if (solved) statusProperty.set("Maze solved!");
+                    if (solved) {
+                        statusProperty.set("Maze solved!");
+                    }
                 }
-                case "saveMaze"    -> statusProperty.set("Maze saved.");
+                case "saveMaze" -> statusProperty.set("Maze saved.");
             }
         }
-        // Forward the same command to the View
         setChanged();
         notifyObservers(arg);
     }

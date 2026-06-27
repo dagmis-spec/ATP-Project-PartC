@@ -9,47 +9,42 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 
 /**
- * Draws custom pink toolbar icons as Canvas nodes.
- * Used for the + (new maze) and ? (solve) toolbar buttons.
+ * Creates canvas-based toolbar icons used by the game screen.
  */
 public class ToolbarIconFactory {
 
-    private static final Color PINK = Color.rgb(255, 182, 217);   // #FFB6D9
+    private static final Color PINK = Color.rgb(255, 182, 217);
 
-    /** Draws a ＋ cross with thick rounded bars in bright pink. */
+    /** Creates a plus icon for the new-maze action. */
     public static Canvas plusIcon(double size) {
         Canvas c = new Canvas(size, size);
         GraphicsContext gc = c.getGraphicsContext2D();
 
-        double bar    = size * 0.22;   // bar thickness
-        double margin = size * 0.14;   // distance from edge
-        double r      = bar * 0.50;    // rounded-end radius
+        double bar = size * 0.22;
+        double margin = size * 0.14;
+        double r = bar * 0.50;
 
         gc.setFill(PINK);
-        // Horizontal bar
         gc.fillRoundRect(margin, (size - bar) / 2,
                 size - 2 * margin, bar, r, r);
-        // Vertical bar
         gc.fillRoundRect((size - bar) / 2, margin,
                 bar, size - 2 * margin, r, r);
 
         return c;
     }
 
-    /** Draws a ❓ circle outline with a centred "?" in bright pink. */
+    /** Creates a question icon for the solve action. */
     public static Canvas questionIcon(double size) {
         Canvas c = new Canvas(size, size);
         GraphicsContext gc = c.getGraphicsContext2D();
 
         double stroke = Math.max(2.5, size * 0.09);
-        double half   = stroke / 2;
+        double half = stroke / 2;
 
-        // Circle outline
         gc.setStroke(PINK);
         gc.setLineWidth(stroke);
         gc.strokeOval(half, half, size - stroke, size - stroke);
 
-        // "?" character centred inside
         gc.setFill(PINK);
         gc.setFont(Font.font("Arial", FontWeight.BOLD, size * 0.48));
         gc.setTextAlign(TextAlignment.CENTER);

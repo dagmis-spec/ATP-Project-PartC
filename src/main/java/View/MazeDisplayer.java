@@ -14,18 +14,12 @@ import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Reusable JavaFX control that draws the maze board.
- *
- * This class belongs to the View layer because it only handles presentation:
- * wall graphics, path cells, player image, goal image, and solution overlay.
- * It does not generate mazes, solve mazes, or decide if movement is legal.
- */
+/** Custom Canvas control that renders maze state and visual overlays. */
 public class MazeDisplayer extends Canvas {
     private static final double BACKGROUND_OPACITY = 1.0;
     private static final double PATH_OPACITY = 0.70;
     private static final double WALL_OVERLAP_PIXELS = 0.35;
-    private static final double CHARACTER_SCALE = 1.6;  // reduced from 2.25 for better cell proportions
+    private static final double CHARACTER_SCALE = 1.6;  // keeps character readable in small cells
     private static final double GOAL_MARKER_SCALE = 1.45;
     private static final double SOLUTION_PATH_OPACITY = 0.62;
     private static final Color PATH_COLOR = Color.rgb(244, 232, 195, PATH_OPACITY);
@@ -41,97 +35,63 @@ public class MazeDisplayer extends Canvas {
     private final Image wallImage       = loadImage("/Images/wall.png");
     private final Image backgroundImage = loadImage("/Images/background.jpg");
 
-    /*
-     * playerImage and goalImage start with the BRIDE_GROOM defaults.
-     * WelcomeViewController calls setCouple() before the game starts so the
-     * user's couple choice is reflected on the very first redraw.
-     */
+    /* Default character images are replaced when a couple is selected. */
     private Image playerImage = loadImage("/Images/bride.png");  // default: bride moves
     private Image goalImage   = loadImage("/Images/groom.png");  // default: groom waits
 
-    /*
-     * Flower trail — every cell the player has ever stepped on gets a flower drawn
-     * on top of the path tile, building a visible trail behind the character.
-     */
+    /* Flower image used to mark visited cells. */
     private final Image flowerImage = loadImage("/Images/flowers.png");
-    /*
-     * Ordered path history used to draw and erase the flower trail.
-     * Stored as "row,col" strings. When the player steps back to a cell already
-     * in the list the list is truncated at that position, removing flowers from
-     * every cell that was visited after it — exactly like un-doing a trail.
-     */
+    /* Ordered cell history lets backtracking remove later trail markers. */
     private final List<String> pathHistory = new ArrayList<>();
 
     public MazeDisplayer() {
-        /*
-         * Canvas does not redraw automatically when its size changes.
-         * These listeners keep the board responsive when the window is resized.
-         */
+        /* Canvas needs explicit redraws after resize events. */
         widthProperty().addListener((observable, oldValue, newValue) -> redraw());
         heightProperty().addListener((observable, oldValue, newValue) -> redraw());
     }
 
-    /**
-     * Sets the maze to draw and clears old visual state that belongs to another maze.
-     */
+    /** Sets the maze and clears visual state from any previous maze. */
     public void setMaze(Maze maze) {
         this.maze = maze;
         this.solution = null;
-        pathHistory.clear();        // reset flower trail for the new maze
+        pathHistory.clear();
         redraw();
     }
 
-    /**
-     * Updates the player location, maintains the flower-trail path history, and redraws.
-     *
-     * Forward step: the new cell is appended to pathHistory.
-     * Backtrack step: if the player returns to a cell already in pathHistory, the list
-     * is truncated at that index — removing flowers from every cell visited after it.
-     */
+    /** Updates the player position and keeps the trail history consistent. */
     public void setPlayerPosition(Position playerPosition) {
         this.playerPosition = playerPosition;
         if (playerPosition != null) {
             String key = playerPosition.getRowIndex() + "," + playerPosition.getColumnIndex();
             int existingIndex = pathHistory.indexOf(key);
             if (existingIndex >= 0) {
-                // Backtrack — erase everything after the revisited cell
+                // Backtracking removes cells after the revisited position.
                 pathHistory.subList(existingIndex + 1, pathHistory.size()).clear();
             } else {
-                // New cell — extend the trail
+                // New cells extend the visible trail.
                 pathHistory.add(key);
             }
         }
         redraw();
     }
 
-    /**
-     * Stores the solution path that should be painted over the maze.
-     */
+    /** Stores the solution path to paint over the maze. */
     public void setSolution(Solution solution) {
         this.solution = solution;
         redraw();
     }
 
-    /**
-     * Applies the couple the user chose on the welcome screen.
-     *
-     * Loads the player and goal sprites from the paths stored in the enum constant
-     * and immediately redraws so the change takes effect without user interaction.
-     * Call this once from MyViewController.setCouple() before the maze is generated.
-     */
+    /** Applies the selected player and goal sprites. */
     public void setCouple(CoupleType couple) {
         if (couple == null) return;
         Image loadedPlayer = loadImage(couple.getPlayerImagePath());
         Image loadedGoal   = loadImage(couple.getGoalImagePath());
-        // Only replace if loading succeeded — keeps previous image as fallback
         if (loadedPlayer != null) playerImage = loadedPlayer;
         if (loadedGoal   != null) goalImage   = loadedGoal;
         redraw();
     }
 
-    /**
-     * Draws the full board according to the current maze state.
-     */
+    /** Redraws the full board from the current state. */
     public void redraw() {
         GraphicsContext graphicsContext = getGraphicsContext2D();
         double width = getWidth();
@@ -178,16 +138,9 @@ public class MazeDisplayer extends Canvas {
             graphicsContext.setFill(Color.web("#eef6dc"));
             graphicsContext.fillRect(0, 0, width, height);
         }
-
-        // No white overlay here: the background should stay clear and natural.
     }
 
-    /**
-     * Draws an image like CSS background-size: cover.
-     *
-     * The image fills the whole target area without stretching. If the image ratio is
-     * different from the board ratio, the extra part is cropped from the center.
-     */
+    /** Draws an image cropped to cover the target area without stretching. */
     private void drawImageCover(GraphicsContext graphicsContext, Image image,
                                 double targetX, double targetY, double targetWidth, double targetHeight) {
         double imageWidth = image.getWidth();
@@ -236,7 +189,7 @@ public class MazeDisplayer extends Canvas {
         double wallWidth = width + 2 * WALL_OVERLAP_PIXELS;
         double wallHeight = height + 2 * WALL_OVERLAP_PIXELS;
 
-        // Use the image only for mazes up to 50×50; larger mazes get a solid color.
+        // Large mazes use a solid wall color for clearer rendering.
         boolean cellTooSmall = maze.getRows() > 50 || maze.getColumns() > 50;
 
         if (wallImage != null && !cellTooSmall) {
@@ -251,8 +204,6 @@ public class MazeDisplayer extends Canvas {
     private void drawPath(GraphicsContext graphicsContext, double x, double y, double width, double height) {
         graphicsContext.setFill(PATH_COLOR);
         graphicsContext.fillRect(x, y, width, height);
-
-        // Very soft center highlight gives paths a calm garden-floor feel.
         double padding = Math.min(width, height) * 0.18;
         graphicsContext.setFill(PATH_SHADOW_COLOR);
         graphicsContext.fillRoundRect(
@@ -265,28 +216,13 @@ public class MazeDisplayer extends Canvas {
         );
     }
 
-    /**
-     * Draws the flower image on every cell the player has stepped on.
-     *
-     * The flower is rendered slightly smaller than the cell (8 % padding on each side)
-     * and at 78 % opacity so the warm path colour still shows through, giving the trail
-     * a natural, layered look. The player's current cell is skipped — the character
-     * sprite covers it, and the flower appears there only once the player moves away.
-     */
-    /**
-     * Paints the flower image on every cell in the current path history.
-     *
-     * Because pathHistory is an ordered list that gets truncated on backtracking,
-     * the flowers automatically disappear from cells the player has un-visited.
-     * The player character sprite is drawn after this method so it always appears
-     * on top of the flower at the current cell — no special-casing needed.
-     */
+    /** Paints flowers on visited cells, removing later markers after backtracking. */
     private void drawFlowerTrail(GraphicsContext gc, double cellWidth, double cellHeight) {
         if (flowerImage == null || pathHistory.isEmpty()) {
             return;
         }
 
-        double padFraction = 0.09;           // 9 % inset → flowers slightly smaller than cells
+        double padFraction = 0.09;           // Keep flowers slightly smaller than cells.
         double padW = cellWidth  * padFraction;
         double padH = cellHeight * padFraction;
         double drawW = cellWidth  - 2 * padW;
@@ -294,13 +230,7 @@ public class MazeDisplayer extends Canvas {
 
         gc.save();
         gc.setGlobalAlpha(0.85);
-        /*
-         * MULTIPLY blend mode makes white pixels (value 1.0) transparent:
-         *   result = source × destination
-         * White × background_color = background_color  (white vanishes)
-         * Flower_color × background_color = slightly-tinted flower (natural look)
-         * This removes the white background of flowers.png without editing the file.
-         */
+        /* MULTIPLY hides the white background in flowers.png. */
         gc.setGlobalBlendMode(BlendMode.MULTIPLY);
         gc.setImageSmoothing(true);
 
@@ -373,9 +303,7 @@ public class MazeDisplayer extends Canvas {
         graphicsContext.fillOval(drawX, drawY, side, side);
     }
 
-    /**
-     * Converts a mouse x coordinate on the canvas into a maze column.
-     */
+    /** Converts a canvas x coordinate to a maze column. */
     public int getColumnForX(double x) {
         if (maze == null || getWidth() <= 0) {
             return -1;
@@ -384,9 +312,7 @@ public class MazeDisplayer extends Canvas {
         return Math.max(0, Math.min(column, maze.getColumns() - 1));
     }
 
-    /**
-     * Converts a mouse y coordinate on the canvas into a maze row.
-     */
+    /** Converts a canvas y coordinate to a maze row. */
     public int getRowForY(double y) {
         if (maze == null || getHeight() <= 0) {
             return -1;

@@ -1,0 +1,36 @@
+2026-06-27 13:02:28.581 [main] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:02:28.775 [main] INFO  solving-server - Client requests maze solving: rows=5, columns=5, algorithm=BestFirstSearch
+2026-06-27 13:02:28.779 [pool-4-thread-1] INFO  solving-server - Maze solving request started.
+2026-06-27 13:02:28.810 [pool-4-thread-1] INFO  solving-server - Maze solving request completed in 31 ms.
+2026-06-27 13:02:28.811 [main] INFO  solving-server - Maze solving completed: solutionLength=5
+2026-06-27 13:02:28.884 [main] INFO  solving-server - Stopping maze solving server on port 5401
+2026-06-27 13:08:31.690 [main] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:08:31.909 [main] INFO  solving-server - Client requests maze solving: rows=5, columns=5, algorithm=BestFirstSearch
+2026-06-27 13:08:31.914 [pool-4-thread-1] INFO  solving-server - Maze solving request started.
+2026-06-27 13:08:31.943 [pool-4-thread-1] INFO  solving-server - Maze solving request completed in 29 ms.
+2026-06-27 13:08:31.948 [main] INFO  solving-server - Maze solving completed: solutionLength=6
+2026-06-27 13:08:32.034 [main] INFO  solving-server - Stopping maze solving server on port 5401
+2026-06-27 13:29:27.892 [JavaFX Application Thread] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:30:26.284 [JavaFX Application Thread] INFO  solving-server - Stopping maze solving server on port 5401
+2026-06-27 13:39:54.404 [main] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:39:54.626 [main] INFO  solving-server - Client requests maze solving: rows=5, columns=5, algorithm=BestFirstSearch
+2026-06-27 13:39:54.630 [pool-4-thread-1] INFO  solving-server - Maze solving request started.
+2026-06-27 13:39:54.656 [pool-4-thread-1] INFO  solving-server - Maze solving request completed in 26 ms.
+2026-06-27 13:39:54.658 [main] INFO  solving-server - Maze solving completed: solutionLength=5
+2026-06-27 13:39:54.748 [main] INFO  solving-server - Stopping maze solving server on port 5401
+2026-06-27 13:41:29.645 [main] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:41:29.900 [main] INFO  solving-server - Client requests maze solving: rows=5, columns=5, algorithm=BestFirstSearch
+2026-06-27 13:41:29.904 [pool-4-thread-1] INFO  solving-server - Maze solving request started.
+2026-06-27 13:41:29.933 [pool-4-thread-1] INFO  solving-server - Maze solving request completed in 29 ms.
+2026-06-27 13:41:29.941 [main] INFO  solving-server - Maze solving completed: solutionLength=5
+2026-06-27 13:41:30.059 [main] INFO  solving-server - Stopping maze solving server on port 5401
+2026-06-27 13:42:57.843 [main] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:42:58.066 [main] INFO  solving-server - Client requests maze solving: rows=5, columns=5, algorithm=BestFirstSearch
+2026-06-27 13:42:58.070 [pool-4-thread-1] INFO  solving-server - Maze solving request started.
+2026-06-27 13:42:58.100 [pool-4-thread-1] INFO  solving-server - Maze solving request completed in 30 ms.
+2026-06-27 13:42:58.103 [main] INFO  solving-server - Maze solving completed: solutionLength=5
+2026-06-27 13:42:58.188 [main] INFO  solving-server - Stopping maze solving server on port 5401
+2026-06-27 13:44:48.807 [JavaFX Application Thread] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:47:18.168 [JavaFX Application Thread] INFO  solving-server - Stopping maze solving server on port 5401
+2026-06-27 13:50:10.460 [JavaFX Application Thread] INFO  solving-server - Starting maze solving server on port 5401
+2026-06-27 13:50:20.831 [JavaFX Application Thread] INFO  solving-server - Stopping maze solving server on port 5401

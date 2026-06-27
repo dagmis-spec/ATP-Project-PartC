@@ -16,12 +16,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
-/**
- * Game-style "SAVE THE DATE!" popup shown when the player solves the maze.
- *
- * Draws a diamond ring with text arching around it on a transparent stage,
- * so no OS window chrome is visible — it looks like a game achievement overlay.
- */
+/** Transparent modal popup shown after the player solves the maze. */
 public class MazeSolvedPopup {
 
     private static final int W = 460;
@@ -69,30 +64,20 @@ public class MazeSolvedPopup {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         double cx = W / 2.0;
         double cy = H / 2.0 - 14;   // shift up to leave room for the button
-
-        // ── Dark rounded background ───────────────────────────────────────
         gc.setFill(Color.rgb(30, 5, 25, 0.97));
         gc.fillRoundRect(4, 4, W - 8, H - 8, 40, 40);
-
-        // ── Hot-pink outer border ─────────────────────────────────────────
         gc.setStroke(Color.rgb(232, 62, 140, 0.95));
         gc.setLineWidth(3.5);
         gc.strokeRoundRect(4, 4, W - 8, H - 8, 40, 40);
-
-        // ── Thin inner blush border ───────────────────────────────────────
         gc.setStroke(Color.rgb(255, 182, 217, 0.40));
         gc.setLineWidth(1.0);
         gc.strokeRoundRect(12, 12, W - 24, H - 24, 34, 34);
-
-        // ── Corner ✦ stars (pink) ─────────────────────────────────────────
         gc.setFont(Font.font("Arial", FontWeight.BOLD, 22));
         gc.setFill(Color.rgb(255, 182, 217, 0.90));
         gc.fillText("✦", 22, 46);
         gc.fillText("✦", W - 48, 46);
         gc.fillText("✦", 22,  H - 50);
         gc.fillText("✦", W - 48, H - 50);
-
-        // ── Ring image with soft pink glow ────────────────────────────────
         var stream = MazeSolvedPopup.class.getResourceAsStream("/Images/ring.png");
         if (stream != null) {
             Image ring = new Image(stream);
@@ -106,35 +91,21 @@ public class MazeSolvedPopup {
             gc.drawImage(ring, cx - rs/2, cy - rs/2 + 8, rs, rs);
             gc.restore();
         }
-
-        // ── Top arc: "♥  SAVE  THE  DATE  ♥" — hugs the top of the ring ──
         drawArcText(gc, "♥  SAVE  THE  DATE  ♥",
                 cx, cy + 8, 122,
                 -90, true,
                 Color.rgb(255, 182, 217), 22);
-
-        // ── Bottom arc: timestamp — hugs the bottom of the ring ───────────
         drawArcText(gc, timestamp,
                 cx, cy + 8, 112,
                 90, false,
                 Color.rgb(255, 210, 230), 19);
-
-        // ── Small hearts ─────────────────────────────────────────────────
         gc.setFont(Font.font(18));
         gc.setFill(Color.rgb(232, 62, 140, 0.85));
         gc.fillText("♥", cx - 106, cy + 174);
         gc.fillText("♥", cx + 86,  cy + 174);
     }
 
-    /**
-     * Draws a string following a circular arc.
-     *
-     * @param cx,cy      centre of the imaginary circle
-     * @param radius     distance from centre to the text baseline
-     * @param centerDeg  angle (0=right, -90=top, 90=bottom) at the arc's midpoint
-     * @param topArc     true → characters face outward on the top half (reads L→R)
-     *                   false → characters face outward on the bottom half (reads L→R)
-     */
+    /** Draws text along a circular arc around the ring. */
     private static void drawArcText(GraphicsContext gc,
                                      String text,
                                      double cx, double cy,
@@ -145,19 +116,14 @@ public class MazeSolvedPopup {
                                      double fontSize) {
         gc.setFont(Font.font("Arial", FontWeight.BOLD, fontSize));
         gc.setFill(color);
-
-        // Arc-length per character ≈ fontSize × 0.58 at the given radius
         double degPerChar = Math.toDegrees(fontSize * 0.58 / radius);
         double totalDeg   = text.length() * degPerChar;
 
         for (int i = 0; i < text.length(); i++) {
             double charDeg;
             if (topArc) {
-                // Advance clockwise → string reads left-to-right across the top
                 charDeg = centerDeg - totalDeg / 2 + i * degPerChar + degPerChar / 2;
             } else {
-                // Advance counter-clockwise → string reads left-to-right across the bottom
-                // (when viewed from outside the circle)
                 charDeg = centerDeg + totalDeg / 2 - i * degPerChar - degPerChar / 2;
             }
 
@@ -167,12 +133,11 @@ public class MazeSolvedPopup {
 
             gc.save();
             gc.translate(x, y);
-            // Rotate so each character stands upright and faces outward
             double rotation = topArc ? (charDeg + 90) : (charDeg - 90);
             gc.rotate(rotation);
             gc.fillText(String.valueOf(text.charAt(i)),
-                    -fontSize * 0.28,   // centre the glyph horizontally
-                    fontSize * 0.36);   // align the baseline
+                    -fontSize * 0.28,
+                    fontSize * 0.36);
             gc.restore();
         }
     }

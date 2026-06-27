@@ -11,11 +11,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Controller for NewMazeDialog.fxml.
- *
- * The dialog is opened modally by MyViewController.onNewMaze().
- * After showAndWait() returns, the caller reads getResultRows() / getResultCols().
- * Values are -1 if the user cancelled or entered invalid input.
+ * Modal form for collecting maze dimensions.
+ * Result values remain -1 when the user cancels or enters invalid input.
  */
 public class NewMazeDialogController {
     private static final Logger logger = LogManager.getLogger(NewMazeDialogController.class);
@@ -29,23 +26,20 @@ public class NewMazeDialogController {
     private int resultRows = -1;
     private int resultCols = -1;
 
-    /** Injected by MyViewController so the dialog can close itself. */
+    /** Allows the dialog controller to close its own Stage. */
     public void setDialogStage(Stage stage) {
         this.dialogStage = stage;
     }
 
     @FXML
     private void initialize() {
-        // Stretch background to fill the dialog pane
         dialogBackground.fitWidthProperty().bind(dialogRoot.widthProperty());
         dialogBackground.fitHeightProperty().bind(dialogRoot.heightProperty());
 
-        // Load the same wallpaper as the welcome screen
         var url = getClass().getResource("/Images/wallpaper2.avif");
         if (url != null) {
             dialogBackground.setImage(new Image(url.toExternalForm()));
         } else {
-            // Fall back to the game background if AVIF is unavailable
             var fallback = getClass().getResource("/Images/background.jpg");
             if (fallback != null) dialogBackground.setImage(new Image(fallback.toExternalForm()));
         }
@@ -61,7 +55,7 @@ public class NewMazeDialogController {
             int cols = Integer.parseInt(colsText);
 
             if (rows < 2 || cols < 2) {
-                // This is user input validation in the View layer, before any Model/server request exists.
+                // Invalid input is logged before a model request is created.
                 logger.warn("Invalid maze dimensions: rows={}, columns={}. Values must be at least 2.",
                         rows, cols);
                 showError("Rows and columns must each be at least 2.");
@@ -73,7 +67,7 @@ public class NewMazeDialogController {
             dialogStage.close();
 
         } catch (NumberFormatException e) {
-            // Non-numeric input is expected user error, so log it as warning and keep showing the Alert.
+            // Non-numeric input is a recoverable user error.
             logger.warn("Invalid maze dimensions input: rows='{}', columns='{}'", rowsText, colsText);
             showError("Please enter whole numbers for rows and columns.");
         }

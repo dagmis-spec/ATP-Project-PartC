@@ -1,17 +1,17 @@
 module atp.project.atpprojectpartc {
-    // Required by the JavaFX controls declared in FXML and created in controller code.
+    // JavaFX controls used by FXML files and controllers.
     requires javafx.controls;
 
-    // Required so FXMLLoader can parse MyView.fxml and instantiate its controller.
+    // FXML loading, media playback, project services, and logging.
     requires javafx.fxml;
     requires javafx.media;
     requires ATPProjectJAR;
     requires org.apache.logging.log4j;
 
-    // FXMLLoader creates View.MyViewController reflectively from MyView.fxml.
+    // FXMLLoader creates View controllers reflectively.
     opens View to javafx.fxml;
 
-    // Expose the project layers inside this named module.
+    // Expose project layers to the application runtime.
     exports View;
     exports ViewModel;
     exports Model;

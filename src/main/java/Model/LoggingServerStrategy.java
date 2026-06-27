@@ -7,10 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Decorates a Part B server strategy with Log4j2 logging.
- *
- * The real generation/solving behavior still belongs to the strategy from ATPProjectJAR.
- * This wrapper only records when a server starts and finishes handling a client request.
+ * Adds request logging around an existing server strategy without changing its behavior.
  */
 class LoggingServerStrategy implements IServerStrategy {
     private final IServerStrategy delegate;
@@ -23,10 +20,7 @@ class LoggingServerStrategy implements IServerStrategy {
         this.operationName = operationName;
     }
 
-    /**
-     * Called by the JAR Server for every accepted client connection.
-     * Timing is measured around the wrapped strategy so each server log includes request duration.
-     */
+    /** Logs request timing around the wrapped strategy call. */
     @Override
     public void serverStrategy(InputStream inputStream, OutputStream outputStream) {
         long startTime = System.currentTimeMillis();

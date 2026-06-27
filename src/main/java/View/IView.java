@@ -1,22 +1,13 @@
 package View;
 
 /**
- * Minimal contract for UI actions that other layers may trigger.
- *
- * Uses only primitive/standard types — no Model classes (Maze, Position, etc.)
- * cross this boundary. The controller converts Model data to plain types before
- * exposing them through this interface.
+ * Minimal UI contract used by the controller.
+ * Keeps Model classes out of the View interface.
  */
 public interface IView {
-    /**
-     * Renders the maze cell grid.
-     * Receives a plain int[][] so no Model class leaks into the View interface.
-     * 0 = path, 1 = wall — the same convention used throughout the project.
-     */
+    /** Renders a maze grid where 0 is path and 1 is wall. */
     void displayMaze(int[][] grid);
 
-    /**
-     * Shows a user-facing message using JavaFX UI components.
-     */
+    /** Shows a user-facing message. */
     void displayMessage(String title, String message);
 }

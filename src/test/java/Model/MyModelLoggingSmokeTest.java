@@ -14,13 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Manual smoke test for the Part C logging path.
- *
- * It exercises the Model without opening JavaFX: server startup, generation, solving,
- * save/load persistence, and shutdown should all produce Log4j2 output under logs/.
- *
- * Close the JavaFX app before running this test because the real Part B servers use
- * fixed local ports 5400 and 5401.
+ * End-to-end logging smoke test for model operations that use local services.
+ * The application must be closed because the services use fixed local ports.
  */
 class MyModelLoggingSmokeTest {
     @Test

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <!-- Relative to the directory where the application is launched. In IntelliJ/Maven, this is the project root. -->
+        <!-- Log files are written relative to the project launch directory. -->
         <Property name="LOG_DIR">logs</Property>
         <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
     </Properties>
@@ -43,13 +43,13 @@
     </Appenders>
 
     <Loggers>
-        <!-- Use this logger for maze-generation server activity. -->
+        <!-- Maze generation service log. -->
         <Logger name="generation-server" level="info" additivity="false">
             <AppenderRef ref="GenerationServerFile"/>
             <AppenderRef ref="ApplicationFile"/>
         </Logger>
 
-        <!-- Use this logger for maze-solving server activity. -->
+        <!-- Maze solving service log. -->
         <Logger name="solving-server" level="info" additivity="false">
             <AppenderRef ref="SolvingServerFile"/>
             <AppenderRef ref="ApplicationFile"/>

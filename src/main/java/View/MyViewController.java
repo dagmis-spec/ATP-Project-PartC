@@ -1,7 +1,7 @@
 package View;
 
 import ViewModel.MyViewModel;
-import algorithms.mazeGenerators.Maze; // View-internal use only — not exposed through IView
+import algorithms.mazeGenerators.Maze;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -31,12 +31,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 /**
- * Controller for MyView.fxml.
- *
- * Implements Observer: the View only observes (the ViewModel), per slide 18.
- * It reads values from JavaFX controls, binds visible state to the ViewModel,
- * and forwards user actions to the ViewModel.
- * It must not generate mazes, solve mazes, or work with files directly.
+ * Game screen controller. Binds UI controls to the ViewModel and forwards user actions.
  */
 public class MyViewController implements IView, Observer {
     private static final DateTimeFormatter SOLVED_TIME_FORMATTER =
@@ -44,7 +39,7 @@ public class MyViewController implements IView, Observer {
 
     private MyViewModel viewModel;
 
-    // Game screen root — needed to bind the background ImageView size
+    // Root node used to keep the background image fitted to the window.
     @FXML private StackPane gameRoot;
     @FXML private ImageView gameBackgroundView;
 
@@ -63,11 +58,7 @@ public class MyViewController implements IView, Observer {
     private MediaPlayer endSoundPlayer;
     private boolean trailSoundEnabled = true;
 
-    /**
-     * Runs after JavaFX injects all FXML controls.
-     *
-     * Only UI defaults belong here. The ViewModel is injected later from Main.
-     */
+    /** Creates view-only controls and default UI state. */
     @FXML
     private void initialize() {
         statusLabel.setText("Ready to generate a maze.");
@@ -81,9 +72,7 @@ public class MyViewController implements IView, Observer {
 
         mazeDisplayer = new MazeDisplayer();
         /*
-         * The canvas size is bound to mazeContainer below.
-         * Marking it unmanaged prevents a layout feedback loop where the canvas changes
-         * the StackPane preferred size, and the StackPane then makes the canvas larger again.
+         * The canvas follows its parent size without contributing its own preferred size.
          */
         mazeDisplayer.setManaged(false);
         mazeDisplayer.widthProperty().bind(mazeContainer.widthProperty());
@@ -95,7 +84,7 @@ public class MyViewController implements IView, Observer {
         applyCustomToolbarIcons();
     }
 
-    /** Replaces the + and ? text Labels with programmatically drawn pink Canvas icons. */
+    /** Replaces text placeholders with drawn toolbar icons. */
     private void applyCustomToolbarIcons() {
         replaceToolbarIcon(btnNewMaze, ToolbarIconFactory.plusIcon(42), "new maze");
         replaceToolbarIcon(btnSolve,   ToolbarIconFactory.questionIcon(42), "solve");
@@ -110,9 +99,7 @@ public class MyViewController implements IView, Observer {
         btn.setGraphic(box);
     }
 
-    /**
-     * Receives the ViewModel created by Main and connects UI controls to its properties.
-     */
+    /** Connects UI controls to ViewModel properties and notifications. */
     public void setViewModel(MyViewModel viewModel) {
         this.viewModel = viewModel;
 
@@ -123,8 +110,8 @@ public class MyViewController implements IView, Observer {
 
         viewModel.mazeProperty().addListener((observable, oldMaze, newMaze) -> {
             if (newMaze != null) {
-                mazeDisplayer.setMaze(newMaze);          // internal View use — OK
-                displayMaze(toGrid(newMaze));             // IView contract: int[][]
+                mazeDisplayer.setMaze(newMaze);
+                displayMaze(toGrid(newMaze));
             }
         });
         viewModel.playerPositionProperty().addListener((observable, oldPosition, newPosition) ->
@@ -140,16 +127,9 @@ public class MyViewController implements IView, Observer {
         Platform.runLater(this::registerKeyboardMovement);
     }
 
-    /**
-     * Called by the ViewModel (Observable) after it processes a Model notification.
-     * The View only observes — it reacts to commands it receives here.
-     *
-     * Communication chain (slide 17):
-     *   Model → ViewModel.update() → ViewModel.notifyObservers() → View.update() → UI changes
-     */
+    /** Applies ViewModel notifications on the JavaFX application thread. */
     @Override
     public void update(Observable o, Object arg) {
-        // JavaFX UI must be updated on the application thread
         Platform.runLater(() -> {
             if (arg instanceof String command) {
                 switch (command) {
@@ -163,26 +143,20 @@ public class MyViewController implements IView, Observer {
                     case "solveMaze" ->
                         mazeDisplayer.setSolution(viewModel.solutionProperty().get());
                     case "movePlayer" ->
-                        // Player position is already updated via playerPositionProperty listener.
-                        // mazeSolvedProperty listener handles the win message — no duplicate call here.
                         mazeDisplayer.setPlayerPosition(viewModel.playerPositionProperty().get());
                 }
             }
         });
     }
 
-    /**
-     * Opens the NewMazeDialog and, if the user confirms, generates a maze with
-     * the chosen dimensions.  The dialog is modal so execution continues here
-     * only after it closes.
-     */
+    /** Opens the new-maze dialog and generates a maze when input is valid. */
     @FXML
     private void onNewMaze() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/View/NewMazeDialog.fxml"));
             Scene dialogScene = new Scene(loader.load());
             dialogScene.getStylesheets().add(
-                    getClass().getResource("/Styles/app.css").toExternalForm());
+                    getClass().getResource("/View/app.css").toExternalForm());
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("New Maze");
@@ -215,9 +189,7 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /**
-     * Opens a save dialog and asks the ViewModel to save the active maze.
-     */
+    /** Saves the active maze to a user-selected file. */
     @FXML
     private void onSaveMaze() {
         FileChooser fileChooser = new FileChooser();
@@ -236,9 +208,7 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /**
-     * Opens a load dialog and asks the ViewModel to load the selected maze.
-     */
+    /** Loads a maze from a user-selected file. */
     @FXML
     private void onLoadMaze() {
         FileChooser fileChooser = new FileChooser();
@@ -259,9 +229,7 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /**
-     * Requests a solution for the active maze.
-     */
+    /** Requests a solution for the active maze. */
     @FXML
     private void onSolveMaze() {
         try {
@@ -271,9 +239,7 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /**
-     * Shows the values from the project configuration file.
-     */
+    /** Shows the current configuration values. */
     @FXML
     private void onProperties() {
         displayMessage("Properties", viewModel.getPropertiesText());
@@ -297,21 +263,14 @@ public class MyViewController implements IView, Observer {
                         + "Solver: configured in config.properties");
     }
 
-    /**
-     * Applies the couple the user selected on the welcome screen to the MazeDisplayer.
-     *
-     * Must be called from WelcomeViewController after setViewModel() so that
-     * MazeDisplayer exists and is fully initialized before the first redraw.
-     */
+    /** Applies the selected character images to the maze control. */
     public void setCouple(CoupleType couple) {
         if (mazeDisplayer != null) {
             mazeDisplayer.setCouple(couple);
         }
     }
 
-    /**
-     * Performs a clean application exit through the ViewModel.
-     */
+    /** Stops sounds, shuts down the model, and exits the application. */
     @FXML
     public void onExit() {
         stopAllSounds();
@@ -321,20 +280,14 @@ public class MyViewController implements IView, Observer {
         Platform.exit();
     }
 
-    /**
-     * Updates the info label using the plain grid — no Model class in the IView contract.
-     * MazeDisplayer is set separately (internal View use) via the mazeProperty listener.
-     */
+    /** Updates maze metadata shown in the status area. */
     @Override
     public void displayMaze(int[][] grid) {
         mazeInfoLabel.setText("Maze ready: " + grid.length + " × " + grid[0].length);
         mazeDisplayer.setPlayerPosition(viewModel.playerPositionProperty().get());
     }
 
-    /**
-     * Converts a Maze to a plain int[][] grid for use through the IView interface.
-     * Maze is a Model class and must not appear in IView — this helper keeps it internal.
-     */
+    /** Converts the maze object to the grid format used by IView. */
     private int[][] toGrid(Maze maze) {
         int rows = maze.getRows();
         int cols = maze.getColumns();
@@ -345,9 +298,7 @@ public class MyViewController implements IView, Observer {
         return grid;
     }
 
-    /**
-     * Shows a modal message dialog for errors and information.
-     */
+    /** Shows a modal message dialog. */
     @Override
     public void displayMessage(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -357,9 +308,7 @@ public class MyViewController implements IView, Observer {
         alert.showAndWait();
     }
 
-    /**
-     * Shows the custom diamond-ring "SAVE THE DATE" popup when the player reaches the goal.
-     */
+    /** Shows the solved-maze celebration popup. */
     private void showMazeSolvedMessage() {
         playEndSound();
         String solvedAt = LocalDateTime.now().format(SOLVED_TIME_FORMATTER);
@@ -371,10 +320,7 @@ public class MyViewController implements IView, Observer {
         return statusLabel.getScene().getWindow();
     }
 
-    /**
-     * Creates media players for the background trail sound and the ending sound.
-     * Sound files are loaded from resources with relative paths.
-     */
+    /** Creates media players for background and ending sounds. */
     private void initializeSoundPlayers() {
         trailSoundPlayer = createMediaPlayer("/sounds/trailSound.mp3");
         if (trailSoundPlayer != null) {
@@ -402,9 +348,7 @@ public class MyViewController implements IView, Observer {
         return new MediaPlayer(media);
     }
 
-    /**
-     * Toggles the trail/background sound from the UI button.
-     */
+    /** Toggles background sound from the toolbar button. */
     @FXML
     private void onToggleTrailSound() {
         trailSoundEnabled = !trailSoundEnabled;
@@ -416,9 +360,7 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /**
-     * Starts the trail sound when a maze becomes active.
-     */
+    /** Starts background sound when a maze becomes active. */
     private void playTrailSound() {
         if (!trailSoundEnabled || trailSoundPlayer == null) {
             return;
@@ -428,7 +370,7 @@ public class MyViewController implements IView, Observer {
         setSoundIcon("⏸");
     }
 
-    /** Updates the music icon label inside the toolbar button. */
+    /** Updates the music icon label. */
     private void setSoundIcon(String symbol) {
         if (soundIcon != null) soundIcon.setText(symbol);
     }
@@ -439,9 +381,7 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /**
-     * Plays the ending sound once when the maze is solved.
-     */
+    /** Plays the ending sound once when the maze is solved. */
     private void playEndSound() {
         if (endSoundPlayer == null) {
             return;
@@ -463,12 +403,7 @@ public class MyViewController implements IView, Observer {
         stopEndSound();
     }
 
-    /**
-     * Enables mouse click/drag movement.
-     *
-     * The mouse target is translated to a maze cell, then moved one legal step at a time
-     * toward that cell. The Model still decides if each step is valid.
-     */
+    /** Enables mouse click and drag movement over the maze control. */
     private void registerMouseMovement() {
         mazeDisplayer.setOnMousePressed(event -> moveBrideTowardMouse(event.getX(), event.getY()));
         mazeDisplayer.setOnMouseDragged(event -> moveBrideTowardMouse(event.getX(), event.getY()));
@@ -496,18 +431,9 @@ public class MyViewController implements IView, Observer {
         }
     }
 
-    /**
-     * Registers NumPad movement required by the assignment.
-     *
-     * The View only translates keys to row/column deltas. The Model decides whether
-     * the move is legal according to walls and maze boundaries.
-     */
+    /** Registers keyboard movement and delegates legality checks to the model. */
     private void registerKeyboardMovement() {
-        /*
-         * Use an event filter instead of setOnKeyPressed so movement still works after
-         * clicking buttons or text fields. The maze container requests focus after New/Load,
-         * but the filter makes the key handling more reliable.
-         */
+        /* Event filters keep movement active after focus moves to toolbar controls. */
         statusLabel.getScene().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
             if (viewModel == null || !viewModel.mazeLoadedProperty().get()) {
                 return;

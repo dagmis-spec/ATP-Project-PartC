@@ -1,14 +1,9 @@
-/*
- * Global application styling.
- * Assistant is the requested UI font. If the font is not installed on the machine,
- * JavaFX will use the next available fallback font.
- */
+/* Shared application styles. */
 .root {
     -fx-font-family: "Assistant", "Segoe UI", Arial, sans-serif;
     -fx-font-size: 14px;
     -fx-background-color: #fffaf0;
 }
-
 .label,
 .button,
 .menu,
@@ -16,102 +11,75 @@
 .text-field {
     -fx-font-family: "Assistant", "Segoe UI", Arial, sans-serif;
 }
-
 .screen-title {
     -fx-font-size: 28px;
     -fx-font-weight: bold;
     -fx-text-fill: #182110;
 }
-
 .field-label {
     -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-text-fill: #24331c;
 }
-
 .maze-info {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: #1d2a16;
 }
-
 .status-label {
     -fx-font-size: 15px;
     -fx-text-fill: #34442b;
 }
-
 .button {
     -fx-font-weight: bold;
     -fx-background-radius: 6px;
     -fx-border-radius: 6px;
     -fx-padding: 6px 13px;
 }
-
 .maze-container {
     -fx-background-color: rgba(255, 251, 236, 0.72);
     -fx-border-color: rgba(74, 103, 45, 0.38);
     -fx-border-width: 2px;
     -fx-padding: 8px;
 }
-
 .start-message {
     -fx-font-size: 26px;
     -fx-font-weight: bold;
     -fx-text-fill: #000000;
 }
-
 .main-content {
     -fx-background-color: #fffaf0;
 }
-
 .controls-row {
     -fx-padding: 2px 0 2px 0;
 }
-
-/* ═══════════════════════════════════════════════════════════════════
-   WELCOME / OPENING SCREEN  —  pink / rose theme
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* Pink palette used throughout:
-   Hot pink  #E83E8C   Rose deep #C9637A
-   Blush     #FFB6D9   Pale pink #F9C5D5  */
-
+/* Welcome screen. */
 .welcome-overlay {
     -fx-background-color: rgba(0, 0, 0, 0.55);
 }
-
-/* ♥ THE WEDDING MAZE GAME ♥ */
 .welcome-title {
     -fx-font-size: 40px;
     -fx-font-weight: bold;
     -fx-text-fill: #FFB6D9;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.85), 12, 0, 0, 3);
 }
-
-/* "Find Your Way to Forever" — larger than before */
 .welcome-subtitle {
     -fx-font-size: 21px;
     -fx-text-fill: #F9C5D5;
     -fx-font-style: italic;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 6, 0, 0, 2);
 }
-
-/* Thin rose divider lines */
 .welcome-separator {
     -fx-background-color: rgba(232, 62, 140, 0.55);
     -fx-max-width: 500px;
     -fx-pref-height: 1px;
 }
-
-/* "Choose Your Couple" label */
 .welcome-section-label {
     -fx-font-size: 19px;
     -fx-font-weight: bold;
     -fx-text-fill: #FFFFFF;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 6, 0, 0, 2);
 }
-
-/* Default couple card */
 .couple-card {
     -fx-background-color: rgba(255, 255, 255, 0.10);
     -fx-background-radius: 14px;
@@ -123,31 +91,23 @@
     -fx-min-width: 195px;
     -fx-min-height: 210px;
 }
-
-/* Hover: subtle pink glow */
 .couple-card:hover {
     -fx-background-color: rgba(232, 62, 140, 0.15);
     -fx-border-color: rgba(232, 62, 140, 0.65);
     -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.40), 14, 0, 0, 0);
 }
-
-/* Selected card — strong rose highlight */
 .couple-card-selected {
     -fx-background-color: rgba(232, 62, 140, 0.28);
     -fx-border-color: #E83E8C;
     -fx-border-width: 3px;
     -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.80), 20, 0, 0, 0);
 }
-
-/* Card name label */
 .card-label {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: #FFFFFF;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 4, 0, 0, 1);
 }
-
-/* ▶ START GAME — large pink gradient button */
 .welcome-start-btn {
     -fx-font-size: 21px;
     -fx-font-weight: bold;
@@ -160,19 +120,15 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.50), 8, 0, 0, 3);
     -fx-min-width: 240px;
 }
-
 .welcome-start-btn:hover {
     -fx-background-color: linear-gradient(to bottom, #FFB0D4, #D94080);
     -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.65), 18, 0, 0, 0);
     -fx-scale-x: 1.04;
     -fx-scale-y: 1.04;
 }
-
 .welcome-start-btn:disabled {
     -fx-opacity: 0.45;
 }
-
-/* Ghost EXIT button */
 .welcome-exit-btn {
     -fx-font-size: 14px;
     -fx-text-fill: rgba(255,255,255,0.65);
@@ -183,77 +139,53 @@
     -fx-padding: 7px 28px 7px 28px;
     -fx-cursor: hand;
 }
-
 .welcome-exit-btn:hover {
     -fx-text-fill: #FFB6D9;
     -fx-border-color: rgba(255,182,217,0.85);
     -fx-background-color: rgba(232,62,140,0.12);
 }
-
-/* ═══════════════════════════════════════════════════════════════════
-   GAME SCREEN  —  background + large game-style buttons
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* Overlay that dims background.jpg so the UI stays readable */
+/* Game screen. */
 .game-bg-overlay {
     -fx-background-color: rgba(0, 0, 0, 0.42);
 }
-
-/* Light-coloured menu bar so the standard menu items are easy to read */
 .game-menu-bar {
     -fx-background-color: rgba(255, 225, 238, 0.94);
     -fx-padding: 2px 6px;
 }
-
-/* Target the text of each top-level menu */
 .game-menu-bar .menu-button > .label {
     -fx-text-fill: #B02860;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
 }
-
-/* Arrow/indicator on sub-menus */
 .game-menu-bar .menu-button > .arrow-button > .arrow {
     -fx-background-color: #B02860;
 }
-
-/* "The Wedding Maze ♥" heading in the toolbar */
 .game-screen-title {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: #B02860;
     -fx-effect: dropshadow(three-pass-box, rgba(255,255,255,0.6), 3, 0, 0, 1);
 }
-
-/* ─── Icon toolbar ─────────────────────────────────────────────── */
-
-/* Toolbar strip below the menu bar — game-style dark-pink band */
 .game-toolbar {
     -fx-background-color: rgba(80, 10, 35, 0.82);
     -fx-border-color: rgba(232, 62, 140, 0.35);
     -fx-border-width: 0 0 2px 0;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.45), 6, 0, 0, 3);
 }
-
-/* Each flat icon button — no visible border, just hover glow */
 .toolbar-btn {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-cursor: hand;
     -fx-padding: 8px 16px;
 }
-
 .toolbar-btn:hover {
     -fx-background-color: rgba(232, 62, 140, 0.22);
     -fx-background-radius: 12px;
     -fx-effect: dropshadow(three-pass-box, rgba(232,62,140,0.45), 10, 0, 0, 0);
 }
-
 .toolbar-btn:disabled {
     -fx-opacity: 0.32;
 }
-
-/* Large icon character */
 .toolbar-icon {
     -fx-font-size: 34px;
     -fx-text-fill: #FFB6D9;
@@ -262,45 +194,34 @@
     -fx-min-width: 44px;
     -fx-min-height: 44px;
 }
-
-/* ❓ Solve — bright pink, larger than base icons */
 .solve-icon {
     -fx-background-color: transparent;
     -fx-text-fill: #FFB6D9;
     -fx-font-size: 40px;
 }
-
-/* ＋ New maze — bright pink, larger than base icons */
 .new-icon {
     -fx-background-color: transparent;
     -fx-text-fill: #FFB6D9;
     -fx-font-size: 40px;
 }
-
-/* Text label beneath each icon */
 .toolbar-text {
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-text-fill: #FFB6D9;
 }
-
-/* ─── Text-field and field-label used in NewMazeDialog ─────────── */
+/* New maze dialog. */
 .dialog-field-label {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: #FFFFFF;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 4, 0, 0, 1);
 }
-
-/* ─── Dialog title ──────────────────────────────────────────────── */
 .dialog-title {
     -fx-font-size: 26px;
     -fx-font-weight: bold;
     -fx-text-fill: #FFB6D9;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.85), 10, 0, 0, 2);
 }
-
-/* text-field also used in the dialog — reuse game-text-field */
 .game-text-field {
     -fx-background-color: rgba(255, 240, 248, 0.88);
     -fx-background-radius: 8px;
@@ -310,28 +231,23 @@
     -fx-font-size: 14px;
     -fx-padding: 5px 8px;
 }
-
-/* Maze canvas fills the BorderPane centre — no extra padding */
 .game-maze-container {
     -fx-background-color: transparent;
 }
-
-/* Status bar at the bottom — matches toolbar dark style */
 .game-status-bar {
     -fx-background-color: rgba(80, 10, 35, 0.75);
     -fx-border-color: rgba(232, 62, 140, 0.30);
     -fx-border-width: 1px 0 0 0;
 }
-
 .game-maze-info {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: #FFB6D9;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 3, 0, 0, 1);
 }
-
 .game-status-label {
     -fx-font-size: 13px;
     -fx-text-fill: rgba(255,182,217,0.80);
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 3, 0, 0, 1);
 }
+
